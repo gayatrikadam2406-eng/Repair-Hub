@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>Technician Dashboard | Repair Hub</title>
+
+<link rel="stylesheet"
+    href="style.css">
+
+<style>
+
+    .dashboard-section {
+        padding: 50px 7%;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h2 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-header p {
+        color: #666;
+    }
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1300px;
+    }
+
+    th {
+        background: #0d6efd;
+        color: white;
+        padding: 14px;
+        text-align: left;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+        background: #f5f7fb;
+    }
+
+    .status {
+        padding: 6px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+
+    .pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .accepted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .in-progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .rejected {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .status-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .status-btn {
+        border: none;
+        padding: 7px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        color: white;
+    }
+
+    .accept-btn {
+        background: #198754;
+    }
+
+    .progress-btn {
+        background: #0d6efd;
+    }
+
+    .complete-btn {
+        background: #20c997;
+    }
+
+    .reject-btn {
+        background: #dc3545;
+    }
+
+    .status-btn:hover {
+        opacity: 0.85;
+    }
+
+    .no-bookings {
+        text-align: center;
+        padding: 30px;
+        color: #666;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+<div class="logo">
+    Repair Hub
+</div>
+
+<ul>
+
+    <li>
+        <a href="index.html">
+            Home
+        </a>
+    </li>
+
+    <li>
+        <a href="services.html">
+            Services
+        </a>
+    </li>
+
+    <li>
+        <a href="booking.html">
+            Book Service
+        </a>
+    </li>
+
+    <li>
+        <a href="contact.html">
+            Contact
+        </a>
+    </li>
+
+</ul>
+
+</nav>
+
+<!-- ================= DASHBOARD ================= -->
+
+<section class="dashboard-section">
+
+<div class="dashboard-header">
+
+    <h2>
+        Technician Dashboard
+    </h2>
+
+    <p>
+        View and manage customer repair service bookings.
+    </p>
+
+</div>
+
+
+
+<div class="table-container">
+
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>ID</th>
+
+                <th>Customer Name</th>
+
+                <th>Phone</th>
+
+                <th>Email</th>
+
+                <th>Address</th>
+
+                <th>Service</th>
+
+                <th>Date</th>
+
+                <th>Time</th>
+
+                <th>Problem</th>
+
+                <th>Status</th>
+
+                <th>Update Status</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody id="bookingTable">
+
+            <tr>
+
+                <td colspan="11"
+                    class="no-bookings">
+
+                    Loading bookings...
+
+                </td>
+
+            </tr>
+
+        </tbody>
+
+
+    </table>
+
+
+</div>
+
+</section>
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+
+// ======================================
+// LOAD ALL BOOKINGS
+// ======================================
+
+async function loadBookings() {
+
+    try {
+
+        const response =
+            await fetch(
+                "http://localhost:5000/bookings"
+            );
+
+
+        const bookings =
+            await response.json();
+
+
+        const table =
+            document.getElementById(
+                "bookingTable"
+            );
+
+
+        if (
+            !response.ok ||
+            bookings.length === 0
+        ) {
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td colspan="11"
+                        class="no-bookings">
+
+                        No bookings found.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+
+
+        table.innerHTML = bookings.map(
+            booking => {
+
+                const statusClass =
+                    booking.status
+                    .toLowerCase()
+                    .replaceAll(" ", "-");
+
+
+                return `
+
+                    <tr>
+
+                        <td>
+                            ${booking.id}
+                        </td>
+
+                        <td>
+                            ${booking.name}
+                        </td>
+
+                        <td>
+                            ${booking.phone}
+                        </td>
+
+                        <td>
+                            ${booking.email}
+                        </td>
+
+                        <td>
+                            ${booking.address}
+                        </td>
+
+                        <td>
+                            ${booking.service}
+                        </td>
+
+                        <td>
+                            ${booking.booking_date}
+                        </td>
+
+                        <td>
+                            ${booking.booking_time}
+                        </td>
+
+                        <td>
+                            ${booking.problem}
+                        </td>
+
+                        <td>
+
+                            <span class="status ${statusClass}">
+
+                                ${booking.status}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <div class="status-buttons">
+
+                                <button
+                                    class="status-btn accept-btn"
+                                    onclick="updateStatus(${booking.id}, 'Accepted')">
+
+                                    Accept
+
+                                </button>
+
+
+                                <button
+                                    class="status-btn progress-btn"
+                                    onclick="updateStatus(${booking.id}, 'In Progress')">
+
+                                    In Progress
+
+                                </button>
+
+
+                                <button
+                                    class="status-btn complete-btn"
+                                    onclick="updateStatus(${booking.id}, 'Completed')">
+
+                                    Completed
+
+                                </button>
+
+
+                                <button
+                                    class="status-btn reject-btn"
+                                    onclick="updateStatus(${booking.id}, 'Rejected')">
+
+                                    Reject
+
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+        ).join("");
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Error loading bookings:",
+            error
+        );
+
+
+        document.getElementById(
+            "bookingTable"
+        ).innerHTML = `
+
+            <tr>
+
+                <td colspan="11"
+                    class="no-bookings">
+
+                    Unable to connect to server.
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+
+// ======================================
+// UPDATE BOOKING STATUS
+// ======================================
+
+async function updateStatus(
+    bookingId,
+    newStatus
+) {
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                `http://localhost:5000/booking-status/${bookingId}`,
+
+                {
+
+                    method: "PUT",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        status: newStatus
+
+                    })
+
+                }
+
+            );
+
+
+        const data =
+            await response.json();
+
+
+        alert(data.message);
+
+
+        if (response.ok) {
+
+            loadBookings();
+
+        }
+
+
+    }
+
+    catch (error) {
+
+
+        console.error(
+            "Status Update Error:",
+            error
+        );
+
+
+        alert(
+            "Unable to connect to the server. Please make sure the backend server is running."
+        );
+
+    }
+
+}
+
+
+
+// ======================================
+// LOAD BOOKINGS ON PAGE LOAD
+// ======================================
+
+loadBookings();
+
+
+</script>
+
+</body>
+
+</html>

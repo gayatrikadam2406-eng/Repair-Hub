@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Book Service | Repair Hub</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+<div class="logo">
+    Repair Hub
+</div>
+
+
+<ul>
+
+    <li>
+        <a href="index.html">
+            Home
+        </a>
+    </li>
+
+    <li>
+        <a href="services.html">
+            Services
+        </a>
+    </li>
+
+    <li>
+        <a href="booking.html">
+            Book Service
+        </a>
+    </li>
+
+    <li>
+        <a href="contact.html">
+            Contact
+        </a>
+    </li>
+
+    <li>
+        <a href="login.html">
+            Login
+        </a>
+    </li>
+
+</ul>
+
+
+<a href="register.html" class="register-btn">
+    Register
+</a>
+
+</nav>
+
+<!-- ================= BOOKING SECTION ================= -->
+
+<section class="booking-section">
+
+<div class="booking-container">
+
+
+    <h2>
+        Book Your Repair Service
+    </h2>
+
+
+    <p>
+        Fill in the details below and our technician will contact you soon.
+    </p>
+
+
+
+    <!-- ================= BOOKING FORM ================= -->
+
+    <form id="bookingForm">
+
+
+        <!-- Full Name -->
+
+        <div class="input-box">
+
+            <i class="fa-solid fa-user"></i>
+
+            <input
+                type="text"
+                id="name"
+                placeholder="Full Name"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Phone -->
+
+        <div class="input-box">
+
+            <i class="fa-solid fa-phone"></i>
+
+            <input
+                type="tel"
+                id="phone"
+                placeholder="Phone Number"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Email -->
+
+        <div class="input-box">
+
+            <i class="fa-solid fa-envelope"></i>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email Address"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Address -->
+
+        <div class="input-box">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            <input
+                type="text"
+                id="address"
+                placeholder="Address"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Select Service -->
+
+        <div class="input-box">
+
+            <select id="service" required>
+
+                <option value="">
+                    Select Service
+                </option>
+
+                <option value="AC Repair">
+                    AC Repair
+                </option>
+
+                <option value="Refrigerator Repair">
+                    Refrigerator Repair
+                </option>
+
+                <option value="TV Repair">
+                    TV Repair
+                </option>
+
+                <option value="Washing Machine Repair">
+                    Washing Machine Repair
+                </option>
+
+                <option value="Bike Repair">
+                    Bike Repair
+                </option>
+
+                <option value="Car Repair">
+                    Car Repair
+                </option>
+
+                <option value="Mobile Repair">
+                    Mobile Repair
+                </option>
+
+                <option value="Laptop Repair">
+                    Laptop Repair
+                </option>
+
+                <option value="Other Repair">
+                    Other Repair
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- Booking Date -->
+
+        <div class="input-box">
+
+            <input
+                type="date"
+                id="date"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Booking Time -->
+
+        <div class="input-box">
+
+            <input
+                type="time"
+                id="time"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- Problem Description -->
+
+        <div class="input-box">
+
+            <textarea
+                id="problem"
+                rows="5"
+                placeholder="Describe Your Problem"
+                required
+            ></textarea>
+
+        </div>
+
+
+
+        <!-- Submit Button -->
+
+        <button
+            type="submit"
+            class="register-btn2">
+
+            Book Service
+
+        </button>
+
+
+    </form>
+
+
+</div>
+
+</section>
+
+<!-- ================= BOOKING JAVASCRIPT ================= -->
+
+<script>
+
+document
+.getElementById("bookingForm")
+.addEventListener("submit", async function(e) {
+
+
+    // Prevent page refresh
+
+    e.preventDefault();
+
+
+
+    // Get values from form
+
+    const name =
+        document.getElementById("name").value.trim();
+
+    const phone =
+        document.getElementById("phone").value.trim();
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const address =
+        document.getElementById("address").value.trim();
+
+    const service =
+        document.getElementById("service").value;
+
+    const date =
+        document.getElementById("date").value;
+
+    const time =
+        document.getElementById("time").value;
+
+    const problem =
+        document.getElementById("problem").value.trim();
+
+
+
+    try {
+
+
+        // Send booking data to backend
+
+        const response = await fetch(
+            "http://localhost:5000/book-service",
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                    "application/json"
+
+                },
+
+
+                // IMPORTANT:
+                // Names must match server.js
+
+                body: JSON.stringify({
+
+                    name: name,
+
+                    phone: phone,
+
+                    email: email,
+
+                    address: address,
+
+                    service: service,
+
+                    booking_date: date,
+
+                    booking_time: time,
+
+                    problem: problem
+
+                })
+
+            }
+        );
+
+
+
+        // Get response from backend
+
+        const data =
+            await response.json();
+
+
+
+        // Show English popup
+
+        alert(data.message);
+
+
+
+        // If booking successful
+
+        if (response.ok) {
+
+
+            // Clear form
+
+            document
+            .getElementById("bookingForm")
+            .reset();
+
+        }
+
+
+    }
+
+
+    catch (error) {
+
+
+        console.error(
+            "Booking Error:",
+            error
+        );
+
+
+        alert(
+            "Unable to connect to the server. Please make sure the backend server is running."
+        );
+
+
+    }
+
+
+});
+
+</script>
+
+<script>
+    const user = localStorage.getItem("user");
+
+    if (!user) {
+        alert("Please login or register first to book a repair service.");
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | Repair Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+
+        .admin-dashboard {
+            padding: 50px 7%;
+            min-height: 80vh;
+        }
+
+        .admin-dashboard > h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .admin-dashboard > p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 45px;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .dashboard-card i {
+            font-size: 30px;
+            color: #0d6efd;
+            margin-bottom: 12px;
+        }
+
+        .dashboard-card h2 {
+            font-size: 30px;
+            margin: 5px 0;
+        }
+
+        .dashboard-card p {
+            color: #666;
+            margin: 0;
+        }
+
+        .table-title {
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #0d6efd;
+            color: white;
+            padding: 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f7fb;
+        }
+
+        .status {
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .accepted {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .progress {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .in-progress {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .rejected {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 25px;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        @media (max-width: 900px) {
+
+            .dashboard-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================= NAVBAR ================= -->
+
+    <nav>
+
+        <div class="logo">
+
+            <a href="index.html">
+                Repair Hub
+            </a>
+
+        </div>
+
+
+        <ul>
+
+            <li>
+                <a href="admin.html">
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="users.html">
+                    Users
+                </a>
+            </li>
+
+            <li>
+    <a href="booking_admin.html">
+        Bookings
+    </a>
+</li>
+
+            <li>
+                <a href="technician_admin.html">
+                    Technicians
+                </a>
+            </li>
+
+            <li>
+                <a href="services.html">
+                    Services
+                </a>
+            </li>
+
+        </ul>
+
+
+        <a href="login.html"
+           class="register-btn">
+
+            Logout
+
+        </a>
+
+    </nav>
+
+
+
+    <!-- ================= ADMIN DASHBOARD ================= -->
+
+    <section class="admin-dashboard">
+
+
+        <h1>
+            Admin Dashboard
+        </h1>
+
+
+        <p>
+            Manage users, technicians and repair bookings.
+        </p>
+
+
+
+        <!-- ================= DASHBOARD CARDS ================= -->
+
+        <div class="dashboard-cards">
+
+
+            <!-- Total Users -->
+
+            <div class="dashboard-card">
+
+                <i class="fa-solid fa-users"></i>
+
+                <h2 id="totalUsers">
+                    0
+                </h2>
+
+                <p>
+                    Total Users
+                </p>
+
+            </div>
+
+
+
+            <!-- Total Bookings -->
+
+            <div class="dashboard-card">
+
+                <i class="fa-solid fa-calendar-check"></i>
+
+                <h2 id="totalBookings">
+                    0
+                </h2>
+
+                <p>
+                    Total Bookings
+                </p>
+
+            </div>
+
+
+
+            <!-- Pending Bookings -->
+
+            <div class="dashboard-card">
+
+                <i class="fa-solid fa-spinner"></i>
+
+                <h2 id="pendingBookings">
+                    0
+                </h2>
+
+                <p>
+                    Pending Services
+                </p>
+
+            </div>
+
+
+
+            <!-- Completed Bookings -->
+
+            <div class="dashboard-card">
+
+                <i class="fa-solid fa-circle-check"></i>
+
+                <h2 id="completedBookings">
+                    0
+                </h2>
+
+                <p>
+                    Completed Services
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- ================= RECENT BOOKINGS ================= -->
+
+        <h2 class="table-title">
+            Recent Bookings
+        </h2>
+
+
+        <div class="table-container">
+
+
+            <table>
+
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            ID
+                        </th>
+
+                        <th>
+                            Customer
+                        </th>
+
+                        <th>
+                            Service
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="bookingTable">
+
+
+                    <tr>
+
+                        <td colspan="6"
+                            class="loading">
+
+                            Loading bookings...
+
+                        </td>
+
+                    </tr>
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+
+        // ==========================================
+        // LOAD ADMIN STATISTICS
+        // ==========================================
+
+        async function loadAdminStats() {
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        "http://localhost:5000/admin-stats"
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load statistics"
+                    );
+
+                }
+
+
+                // Display real database values
+
+                document.getElementById(
+                    "totalUsers"
+                ).innerText =
+                    data.totalUsers;
+
+
+                document.getElementById(
+                    "totalBookings"
+                ).innerText =
+                    data.totalBookings;
+
+
+                document.getElementById(
+                    "pendingBookings"
+                ).innerText =
+                    data.pendingBookings;
+
+
+                document.getElementById(
+                    "completedBookings"
+                ).innerText =
+                    data.completedBookings;
+
+
+            }
+
+
+            catch (error) {
+
+
+                console.error(
+                    "Admin Stats Error:",
+                    error
+                );
+
+
+            }
+
+        }
+
+
+
+        // ==========================================
+        // LOAD BOOKINGS
+        // ==========================================
+
+        async function loadBookings() {
+
+
+            const table =
+                document.getElementById(
+                    "bookingTable"
+                );
+
+
+            try {
+
+
+                const response =
+                    await fetch(
+                        "http://localhost:5000/bookings"
+                    );
+
+
+                const bookings =
+                    await response.json();
+
+
+                if (
+                    !response.ok ||
+                    bookings.length === 0
+                ) {
+
+
+                    table.innerHTML = `
+
+                        <tr>
+
+                            <td colspan="6"
+                                class="loading">
+
+                                No bookings found.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+
+                    return;
+
+                }
+
+
+
+                // Show latest bookings first
+
+                table.innerHTML =
+                    bookings.slice(0, 10).map(
+                        booking => {
+
+
+                            let status =
+                                booking.status ||
+                                "Pending";
+
+
+                            let statusClass =
+                                status
+                                    .toLowerCase()
+                                    .replaceAll(
+                                        " ",
+                                        "-"
+                                    );
+
+
+                            return `
+
+                                <tr>
+
+                                    <td>
+                                        ${booking.id}
+                                    </td>
+
+                                    <td>
+                                        ${booking.name}
+                                    </td>
+
+                                    <td>
+                                        ${booking.service}
+                                    </td>
+
+                                    <td>
+                                        ${booking.booking_date}
+                                    </td>
+
+                                    <td>
+                                        ${booking.booking_time}
+                                    </td>
+
+                                    <td>
+
+                                        <span
+                                            class="status ${statusClass}">
+
+                                            ${status}
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            `;
+
+                        }
+
+                    ).join("");
+
+
+            }
+
+
+            catch (error) {
+
+
+                console.error(
+                    "Booking Error:",
+                    error
+                );
+
+
+                table.innerHTML = `
+
+                    <tr>
+
+                        <td colspan="6"
+                            class="error">
+
+                            Unable to connect to backend server.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+        }
+
+
+
+        // ==========================================
+        // LOAD DASHBOARD
+        // ==========================================
+
+        loadAdminStats();
+
+        loadBookings();
+
+
+    </script>
+
+
+</body>
+
+</html>
