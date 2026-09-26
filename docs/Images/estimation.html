@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Cost Estimation | Repair Hub</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<!-- Navbar -->
+
+<nav>
+
+<div class="logo">
+Repair Hub
+</div>
+
+<ul>
+
+<li><a href="index.html">Home</a></li>
+<li><a href="services.html">Services</a></li>
+<li><a href="booking.html">Book Service</a></li>
+<li><a href="estimation.html">Cost Estimation</a></li>
+<li><a href="contact.html">Contact</a></li>
+<li><a href="login.html">Login</a></li>
+
+</ul>
+
+<a href="register.html" class="register-btn">Register</a>
+
+</nav>
+
+<!-- Estimation -->
+
+<section class="estimate-section">
+
+<div class="estimate-box">
+
+<h2>Repair Cost Estimation</h2>
+
+<p>Select your device and problem to get an estimated repair cost.</p>
+
+<select id="device">
+
+<option value="">Select Device</option>
+
+<option>AC</option>
+
+<option>Refrigerator</option>
+
+<option>TV</option>
+
+<option>Washing Machine</option>
+
+<option>Bike</option>
+
+<option>Car</option>
+
+<option>Mobile</option>
+
+<option>Laptop</option>
+
+<option>Other Repair</option>
+
+</select>
+
+<select id="problem">
+
+<option value="">Select Problem</option>
+
+<option>Minor Issue</option>
+
+<option>Major Issue</option>
+
+<option>Replacement Required</option>
+
+</select>
+
+<button onclick="estimateCost()">
+
+Estimate Cost
+
+</button>
+
+<h3 id="result"></h3>
+
+</div>
+
+</section>
+
+<script src="script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Users | Repair Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+
+        .users-dashboard {
+            padding: 50px 7%;
+            min-height: 80vh;
+        }
+
+        .users-dashboard h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .users-dashboard > p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+        }
+
+        .users-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #0d6efd;
+            color: white;
+            padding: 14px;
+            text-align: left;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f7fb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 25px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 25px;
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <nav>
+
+        <div class="logo">
+
+            <a href="index.html">
+                Repair Hub
+            </a>
+
+        </div>
+
+        <ul>
+
+            <li>
+                <a href="admin.html">
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="users.html">
+                    Users
+                </a>
+            </li>
+
+            <li>
+                <a href="admin.html">
+                    Bookings
+                </a>
+            </li>
+
+            <li>
+                <a href="technician-dashboard.html">
+                    Technicians
+                </a>
+            </li>
+
+            <li>
+                <a href="services.html">
+                    Services
+                </a>
+            </li>
+
+        </ul>
+
+        <a href="login.html" class="register-btn">
+            Logout
+        </a>
+
+    </nav>
+
+
+    <!-- USERS DASHBOARD -->
+
+    <section class="users-dashboard">
+
+        <h1>
+            Registered Users
+        </h1>
+
+        <p>
+            View customers registered on Repair Hub.
+        </p>
+
+
+        <div class="users-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Name</th>
+
+                        <th>Email</th>
+
+                        <th>Phone</th>
+
+                        <th>Address</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="usersTable">
+
+                    <tr>
+
+                        <td colspan="5" class="loading">
+                            Loading users...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- JAVASCRIPT -->
+
+    <script>
+
+        async function loadUsers() {
+
+            const table =
+                document.getElementById("usersTable");
+
+            try {
+
+                const response =
+                    await fetch(
+                        "https://repair-hub-production-94bc.up.railway.app/users"
+                    );
+
+                const users =
+                    await response.json();
+
+
+                if (!response.ok || users.length === 0) {
+
+                    table.innerHTML = `
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="loading">
+
+                                No registered users found.
+
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                    return;
+
+                }
+
+
+                table.innerHTML =
+                    users.map(user => {
+
+                        return `
+
+                            <tr>
+
+                                <td>
+                                    ${user.id}
+                                </td>
+
+                                <td>
+                                    ${user.name}
+                                </td>
+
+                                <td>
+                                    ${user.email}
+                                </td>
+
+                                <td>
+                                    ${user.phone}
+                                </td>
+
+                                <td>
+                                    ${user.address}
+                                </td>
+
+                            </tr>
+
+                        `;
+
+                    }).join("");
+
+
+            } catch (error) {
+
+                console.error(
+                    "Users Error:",
+                    error
+                );
+
+                table.innerHTML = `
+
+                    <tr>
+
+                        <td colspan="5"
+                            class="error">
+
+                            Unable to connect to backend server.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+
+        }
+
+
+        loadUsers();
+
+    </script>
+
+</body>
+
+</html>
