@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Manage Bookings | Repair Hub</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+<style>
+
+    .booking-admin {
+        padding: 60px 7%;
+        min-height: 80vh;
+    }
+
+    .page-title {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-title h1 {
+        font-size: 36px;
+        color: #0d6efd;
+        margin-bottom: 10px;
+    }
+
+    .page-title p {
+        color: #666;
+        font-size: 17px;
+    }
+
+    .table-container {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1100px;
+    }
+
+    th {
+        background: #0d6efd;
+        color: white;
+        padding: 15px;
+        text-align: left;
+    }
+
+    td {
+        padding: 14px;
+        border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 7px 12px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .accepted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .in-progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .rejected {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .empty-message {
+        text-align: center;
+        padding: 30px;
+        color: #777;
+        font-size: 18px;
+    }
+
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<!-- NAVBAR -->
+
+<nav>
+
+    <div class="logo">
+
+        <a href="admin.html">
+            Repair Hub
+        </a>
+
+    </div>
+
+    <ul>
+
+        <li>
+            <a href="admin.html">
+                Dashboard
+            </a>
+        </li>
+
+        <li>
+            <a href="users.html">
+                Users
+            </a>
+        </li>
+
+        <li>
+            <a href="booking_admin.html">
+                Bookings
+            </a>
+        </li>
+
+        <li>
+            <a href="technician-dashboard.html">
+                Technicians
+            </a>
+        </li>
+
+        <li>
+            <a href="services.html">
+                Services
+            </a>
+        </li>
+
+    </ul>
+
+    <a href="login.html" class="register-btn">
+        Logout
+    </a>
+
+</nav>
+
+
+<!-- BOOKING ADMIN -->
+
+<section class="booking-admin">
+
+    <div class="page-title">
+
+        <h1>
+            Manage Bookings
+        </h1>
+
+        <p>
+            View and monitor all customer repair service bookings.
+        </p>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Customer</th>
+
+                    <th>Phone</th>
+
+                    <th>Email</th>
+
+                    <th>Service</th>
+
+                    <th>Date</th>
+
+                    <th>Time</th>
+
+                    <th>Problem</th>
+
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="bookingTable">
+
+                <tr>
+
+                    <td colspan="9"
+                        class="empty-message">
+
+                        Loading bookings...
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+<!-- JAVASCRIPT -->
+
+<script>
+
+    async function loadBookings() {
+
+        const table =
+            document.getElementById("bookingTable");
+
+        try {
+
+            const response =
+                await fetch(
+                    "http://localhost:5000/bookings"
+                );
+
+            const bookings =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load bookings"
+                );
+
+            }
+
+
+            if (bookings.length === 0) {
+
+                table.innerHTML = `
+
+                    <tr>
+
+                        <td colspan="9"
+                            class="empty-message">
+
+                            No bookings found.
+
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            table.innerHTML = "";
+
+
+            bookings.forEach(booking => {
+
+                const status =
+                    booking.status || "Pending";
+
+
+                const statusClass =
+                    status
+                        .toLowerCase()
+                        .replaceAll(" ", "-");
+
+
+                const row = document.createElement("tr");
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${booking.id}
+                    </td>
+
+                    <td>
+                        ${booking.name}
+                    </td>
+
+                    <td>
+                        ${booking.phone}
+                    </td>
+
+                    <td>
+                        ${booking.email}
+                    </td>
+
+                    <td>
+                        ${booking.service}
+                    </td>
+
+                    <td>
+                        ${booking.booking_date}
+                    </td>
+
+                    <td>
+                        ${booking.booking_time}
+                    </td>
+
+                    <td>
+                        ${booking.problem}
+                    </td>
+
+                    <td>
+
+                        <span class="status ${statusClass}">
+
+                            ${status}
+
+                        </span>
+
+                    </td>
+
+                `;
+
+
+                table.appendChild(row);
+
+            });
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "Booking Admin Error:",
+                error
+            );
+
+
+            table.innerHTML = `
+
+                <tr>
+
+                    <td colspan="9"
+                        class="empty-message">
+
+                        Unable to connect to server.
+                        Please make sure the backend is running.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+
+    }
+
+
+    // Load bookings when page opens
+
+    loadBookings();
+
+</script>
+```
+
+</body>
+
+</html>

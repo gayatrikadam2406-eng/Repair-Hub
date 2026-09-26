@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>My Dashboard | Repair Hub</title>
+
+<link rel="stylesheet"
+    href="style.css">
+
+<style>
+
+    .customer-dashboard {
+        padding: 60px 7%;
+        min-height: 80vh;
+    }
+
+    .dashboard-title {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .dashboard-title h2 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-title p {
+        color: #666;
+    }
+
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto 35px;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+    }
+
+    .search-box button {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        background: #0d6efd;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .search-box button:hover {
+        background: #0b5ed7;
+    }
+
+    .booking-card {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        display: none;
+    }
+
+    .booking-card h3 {
+        margin-bottom: 20px;
+    }
+
+    .booking-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-box {
+        padding: 15px;
+        background: #f5f7fb;
+        border-radius: 6px;
+    }
+
+    .info-box strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .status-title {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+
+    .pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .accepted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .in-progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .rejected {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .error-message {
+        text-align: center;
+        color: #dc3545;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+
+    .logout-btn {
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .logout-btn:hover {
+        background: #0b5ed7;
+    }
+
+    @media (max-width: 600px) {
+
+        .booking-info {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ================= LOGIN CHECK ================= -->
+
+<script>
+
+    const loggedInUser = localStorage.getItem("user");
+
+    if (!loggedInUser) {
+
+        alert("Please login first to access your dashboard.");
+
+        window.location.href = "login.html";
+
+    }
+
+</script>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+    <div class="logo">
+
+        <a href="index.html">
+            Repair Hub
+        </a>
+
+    </div>
+
+
+    <ul>
+
+        <li>
+            <a href="index.html">
+                Home
+            </a>
+        </li>
+
+        <li>
+            <a href="services.html">
+                Services
+            </a>
+        </li>
+
+        <li>
+            <a href="booking.html">
+                Book Service
+            </a>
+        </li>
+
+        <li>
+            <a href="booking-status.html">
+                Track Booking
+            </a>
+        </li>
+
+        <li>
+            <a href="contact.html">
+                Contact
+            </a>
+        </li>
+
+    </ul>
+
+
+    <button
+        type="button"
+        class="logout-btn"
+        onclick="logoutUser()">
+
+        Logout
+
+    </button>
+
+</nav>
+
+
+<!-- ================= CUSTOMER DASHBOARD ================= -->
+
+<section class="customer-dashboard">
+
+
+    <div class="dashboard-title">
+
+        <h2>
+            My Booking Dashboard
+        </h2>
+
+        <p>
+            Enter your Booking ID to view your repair service details and current status.
+        </p>
+
+    </div>
+
+
+    <!-- SEARCH BOOKING -->
+
+    <div class="search-box">
+
+        <input
+            type="number"
+            id="bookingId"
+            placeholder="Enter Booking ID"
+            min="1">
+
+
+        <button
+            type="button"
+            onclick="getBooking()">
+
+            View My Booking
+
+        </button>
+
+
+        <div
+            id="errorMessage"
+            class="error-message">
+
+        </div>
+
+    </div>
+
+
+    <!-- BOOKING DETAILS -->
+
+    <div
+        id="bookingCard"
+        class="booking-card">
+
+
+        <h3>
+            My Booking Details
+        </h3>
+
+
+        <div class="booking-info">
+
+
+            <div class="info-box">
+
+                <strong>
+                    Booking ID
+                </strong>
+
+                <span id="booking_id"></span>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <strong>
+                    Customer Name
+                </strong>
+
+                <span id="customer_name"></span>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <strong>
+                    Service
+                </strong>
+
+                <span id="service"></span>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <strong>
+                    Booking Date
+                </strong>
+
+                <span id="booking_date"></span>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <strong>
+                    Booking Time
+                </strong>
+
+                <span id="booking_time"></span>
+
+            </div>
+
+
+            <div class="info-box">
+
+                <strong>
+                    Problem
+                </strong>
+
+                <span id="problem"></span>
+
+            </div>
+
+
+        </div>
+
+
+        <h4 class="status-title">
+            Current Booking Status
+        </h4>
+
+
+        <span
+            id="booking_status"
+            class="status">
+
+        </span>
+
+
+    </div>
+
+
+</section>
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+
+    async function getBooking() {
+
+
+        const bookingId =
+            document.getElementById("bookingId")
+            .value
+            .trim();
+
+
+        const card =
+            document.getElementById("bookingCard");
+
+
+        const error =
+            document.getElementById("errorMessage");
+
+
+        card.style.display = "none";
+
+        error.innerText = "";
+
+
+        if (!bookingId) {
+
+            error.innerText =
+                "Please enter your Booking ID.";
+
+            return;
+
+        }
+
+
+        try {
+
+
+            const response =
+                await fetch(
+                    `http://localhost:5000/booking-status/${bookingId}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                error.innerText =
+                    data.message ||
+                    "Booking not found.";
+
+                return;
+
+            }
+
+
+            document.getElementById("booking_id")
+                .innerText = data.id;
+
+
+            document.getElementById("customer_name")
+                .innerText = data.name;
+
+
+            document.getElementById("service")
+                .innerText = data.service;
+
+
+            document.getElementById("booking_date")
+                .innerText = data.booking_date;
+
+
+            document.getElementById("booking_time")
+                .innerText = data.booking_time;
+
+
+            document.getElementById("problem")
+                .innerText = data.problem;
+
+
+            const status =
+                document.getElementById("booking_status");
+
+
+            const currentStatus =
+                data.status || "Pending";
+
+
+            status.innerText =
+                currentStatus;
+
+
+            status.className =
+                "status";
+
+
+            status.classList.add(
+
+                currentStatus
+                    .toLowerCase()
+                    .replaceAll(" ", "-")
+
+            );
+
+
+            card.style.display =
+                "block";
+
+
+        }
+
+
+        catch (err) {
+
+
+            console.error(
+                "Dashboard Error:",
+                err
+            );
+
+
+            error.innerText =
+                "Unable to connect to server. Please make sure the backend server is running.";
+
+        }
+
+    }
+
+
+    // ================= LOGOUT =================
+
+    function logoutUser() {
+
+        localStorage.removeItem("user");
+
+        localStorage.removeItem("userId");
+
+        alert("You have been logged out successfully.");
+
+        window.location.href = "index.html";
+
+    }
+
+</script>
+
+</body>
+
+</html>

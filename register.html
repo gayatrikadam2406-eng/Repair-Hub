@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Register | Repair Hub</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+    <div class="logo">
+
+        <a href="index.html">
+            Repair Hub
+        </a>
+
+    </div>
+
+
+    <ul>
+
+        <li>
+            <a href="index.html">
+                Home
+            </a>
+        </li>
+
+        <li>
+            <a href="services.html">
+                Services
+            </a>
+        </li>
+
+        <li>
+            <a href="booking.html">
+                Book Service
+            </a>
+        </li>
+
+        <li>
+            <a href="contact.html">
+                Contact
+            </a>
+        </li>
+
+    </ul>
+
+
+    <a href="login.html" class="register-btn">
+        Login
+    </a>
+
+</nav>
+
+
+
+<!-- ================= REGISTER SECTION ================= -->
+
+<section class="register-section">
+
+
+    <div class="register-container">
+
+
+        <!-- LEFT SIDE IMAGE -->
+
+        <div class="register-image">
+
+            <img src="Images/hero.jpg" alt="Repair Hub">
+
+        </div>
+
+
+
+        <!-- RIGHT SIDE REGISTER FORM -->
+
+        <div class="register-form">
+
+
+            <h2>
+                Create Account
+            </h2>
+
+
+            <p>
+                Register to book repair services easily.
+            </p>
+
+
+
+            <!-- REGISTER FORM -->
+
+            <form id="registerForm">
+
+
+                <!-- FULL NAME -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-user"></i>
+
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Full Name"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- EMAIL -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-envelope"></i>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Email Address"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- PHONE -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-phone"></i>
+
+                    <input
+                        type="tel"
+                        id="phone"
+                        placeholder="Mobile Number"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- ADDRESS -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    <input
+                        type="text"
+                        id="address"
+                        placeholder="Address"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- PASSWORD -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Password"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- CONFIRM PASSWORD -->
+
+                <div class="input-box">
+
+                    <i class="fa-solid fa-lock"></i>
+
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        placeholder="Confirm Password"
+                        required
+                    >
+
+                </div>
+
+
+
+                <!-- REGISTER BUTTON -->
+
+                <button
+                    type="submit"
+                    class="register-btn2">
+
+                    Register
+
+                </button>
+
+
+            </form>
+
+
+
+            <!-- LOGIN LINK -->
+
+            <p class="login-link">
+
+                Already have an account?
+
+                <a href="login.html">
+                    Login
+                </a>
+
+            </p>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ================= REGISTER JAVASCRIPT ================= -->
+
+<script>
+
+document
+.getElementById("registerForm")
+.addEventListener("submit", async function(e) {
+
+
+    // Stop page refresh
+
+    e.preventDefault();
+
+
+
+    // Get values entered by user
+
+    const name =
+        document.getElementById("name").value.trim();
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const phone =
+        document.getElementById("phone").value.trim();
+
+    const address =
+        document.getElementById("address").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const confirmPassword =
+        document.getElementById("confirmPassword").value;
+
+
+
+    // Check Password
+
+    if (password !== confirmPassword) {
+
+        alert("Passwords do not match!");
+
+        return;
+
+    }
+
+
+
+    try {
+
+
+        // Send data to Backend
+
+        const response = await fetch(
+            "http://localhost:5000/register",
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                    "application/json"
+
+                },
+
+
+                // Send actual form data
+
+                body: JSON.stringify({
+
+    name: name,
+
+    email: email,
+
+    phone: phone,
+
+    address: address,
+
+    password: password
+
+})
+
+            }
+        );
+
+
+
+        // Get Backend Response
+
+        const data =
+            await response.json();
+
+
+
+        // Show English Message
+
+        alert(data.message);
+
+
+
+        // If Registration Successful
+
+        if (response.ok) {
+
+
+            // Clear Form
+
+            document
+            .getElementById("registerForm")
+            .reset();
+
+
+
+            // Redirect to Login Page
+
+            window.location.href =
+                "login.html";
+
+        }
+
+
+    }
+
+
+    catch (error) {
+
+
+        console.error(
+            "Registration Error:",
+            error
+        );
+
+
+        alert(
+            "Unable to connect to the server. Please make sure the backend server is running."
+        );
+
+
+    }
+
+
+});
+
+</script>
+
+</body>
+
+</html>

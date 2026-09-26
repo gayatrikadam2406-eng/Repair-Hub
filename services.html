@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Services | Repair Hub</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<script>
+
+    // ================= LOGIN CHECK =================
+
+    const savedUser = localStorage.getItem("user");
+
+    let isLoggedIn = false;
+
+    if (savedUser) {
+
+        try {
+
+            const userData = JSON.parse(savedUser);
+
+            if (
+                userData &&
+                (userData.id || userData.email)
+            ) {
+
+                isLoggedIn = true;
+
+            }
+
+        } catch (error) {
+
+            isLoggedIn = false;
+
+        }
+
+    }
+
+
+    // If user is NOT logged in
+
+    if (!isLoggedIn) {
+
+        localStorage.removeItem("user");
+        localStorage.removeItem("userId");
+
+        alert("Please login first to access Services.");
+
+        window.location.replace("login.html");
+
+    }
+
+</script>
+
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+    <div class="logo">
+        Repair Hub
+    </div>
+
+    <ul>
+
+        <li>
+            <a href="index.html">Home</a>
+        </li>
+
+        <li>
+            <a href="services.html">Services</a>
+        </li>
+
+        <li>
+            <a href="booking.html">Book Service</a>
+        </li>
+
+        <li>
+            <a href="contact.html">Contact</a>
+        </li>
+
+        <li>
+            <a href="login.html">Login</a>
+        </li>
+
+    </ul>
+
+    <a href="register.html" class="register-btn">
+        Register
+    </a>
+
+</nav>
+
+
+<!-- ================= SERVICES BANNER ================= -->
+
+<section class="service-banner">
+
+    <h1>Our Repair Services</h1>
+
+    <p>
+        Professional repair services for home appliances,
+        electronics and vehicles.
+    </p>
+
+</section>
+
+
+<!-- ================= SERVICES ================= -->
+
+<section class="all-services">
+
+    <div class="service-grid">
+
+
+        <!-- AC -->
+
+        <div class="service-box">
+
+            <img src="Images/ac.png" alt="AC Repair">
+
+            <h3>AC Repair</h3>
+
+            <p>
+                Cooling issues, gas filling, water leakage
+                and installation.
+            </p>
+
+            <h4>Starting From ₹499</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- REFRIGERATOR -->
+
+        <div class="service-box">
+
+            <img src="Images/fridge.png" alt="Refrigerator Repair">
+
+            <h3>Refrigerator Repair</h3>
+
+            <p>
+                Cooling problems, compressor repair
+                and gas refill.
+            </p>
+
+            <h4>Starting From ₹599</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- TV -->
+
+        <div class="service-box">
+
+            <img src="Images/tv.png" alt="TV Repair">
+
+            <h3>TV Repair</h3>
+
+            <p>
+                LED, LCD and Smart TV repair service.
+            </p>
+
+            <h4>Starting From ₹399</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- WASHING MACHINE -->
+
+        <div class="service-box">
+
+            <img src="Images/washing-machine.png" alt="Washing Machine Repair">
+
+            <h3>Washing Machine</h3>
+
+            <p>
+                Drum, motor and water leakage repair.
+            </p>
+
+            <h4>Starting From ₹499</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- BIKE -->
+
+        <div class="service-box">
+
+            <img src="Images/bike.png" alt="Bike Repair">
+
+            <h3>Bike Repair</h3>
+
+            <p>
+                Engine service, brake repair
+                and maintenance.
+            </p>
+
+            <h4>Starting From ₹699</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- CAR -->
+
+        <div class="service-box">
+
+            <img src="Images/car.png" alt="Car Repair">
+
+            <h3>Car Repair</h3>
+
+            <p>
+                Car servicing, engine repair
+                and diagnostics.
+            </p>
+
+            <h4>Starting From ₹999</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- MOBILE -->
+
+        <div class="service-box">
+
+            <img src="Images/mobile.png" alt="Mobile Repair">
+
+            <h3>Mobile Repair</h3>
+
+            <p>
+                Screen replacement, battery
+                and software repair.
+            </p>
+
+            <h4>Starting From ₹299</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- LAPTOP -->
+
+        <div class="service-box">
+
+            <img src="Images/laptop.png" alt="Laptop Repair">
+
+            <h3>Laptop Repair</h3>
+
+            <p>
+                Keyboard, motherboard
+                and software repair.
+            </p>
+
+            <h4>Starting From ₹599</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+        <!-- OTHER REPAIR -->
+
+        <div class="service-box">
+
+            <img src="Images/others.png" alt="Other Repair">
+
+            <h3>Other Repair</h3>
+
+            <p>
+                Didn't find your appliance?
+                We repair many other devices too.
+            </p>
+
+            <h4>Starting From ₹399</h4>
+
+            <a href="booking.html" class="service-btn">
+                Book Now
+            </a>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+
+<footer>
+
+    <h3>Repair Hub</h3>
+
+    <p>
+        One Platform For All Repair Services
+    </p>
+
+    <p>
+        © 2026 Repair Hub | All Rights Reserved
+    </p>
+
+</footer>
+
+</body>
+
+</html>

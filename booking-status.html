@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>Booking Status | Repair Hub</title>
+
+<link rel="stylesheet"
+    href="style.css">
+
+<style>
+
+    .status-section {
+        min-height: 80vh;
+        padding: 60px 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .status-container {
+        width: 100%;
+        max-width: 600px;
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .status-container h2 {
+        margin-bottom: 10px;
+        font-size: 30px;
+    }
+
+    .status-container p {
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    .status-input {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 16px;
+    }
+
+    .check-btn {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 6px;
+        background: #0d6efd;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .check-btn:hover {
+        background: #0b5ed7;
+    }
+
+    .booking-result {
+        margin-top: 30px;
+        text-align: left;
+        display: none;
+    }
+
+    .booking-result h3 {
+        margin-bottom: 15px;
+    }
+
+    .booking-info {
+        margin-bottom: 10px;
+    }
+
+    .booking-status {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .accepted {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .in-progress {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .rejected {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .error-message {
+        color: #dc3545;
+        margin-top: 20px;
+        font-weight: bold;
+    }
+
+</style>
+```
+
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav>
+
+```
+<div class="logo">
+    Repair Hub
+</div>
+
+<ul>
+
+    <li>
+        <a href="index.html">
+            Home
+        </a>
+    </li>
+
+    <li>
+        <a href="services.html">
+            Services
+        </a>
+    </li>
+
+    <li>
+        <a href="booking.html">
+            Book Service
+        </a>
+    </li>
+
+    <li>
+        <a href="booking-status.html">
+            Track Booking
+        </a>
+    </li>
+
+    <li>
+        <a href="contact.html">
+            Contact
+        </a>
+    </li>
+
+</ul>
+
+<a href="login.html"
+   class="register-btn">
+
+    Login
+
+</a>
+```
+
+</nav>
+
+<!-- ================= BOOKING STATUS ================= -->
+
+<section class="status-section">
+
+```
+<div class="status-container">
+
+    <h2>
+        Track Your Booking
+    </h2>
+
+    <p>
+        Enter your Booking ID to check your repair service status.
+    </p>
+
+
+    <input
+        type="number"
+        id="bookingId"
+        class="status-input"
+        placeholder="Enter Booking ID"
+        required
+    >
+
+
+    <button
+        class="check-btn"
+        onclick="checkBookingStatus()">
+
+        Check Booking Status
+
+    </button>
+
+
+    <!-- Booking Result -->
+
+    <div
+        id="bookingResult"
+        class="booking-result">
+
+        <h3>
+            Booking Details
+        </h3>
+
+        <div class="booking-info">
+            <strong>Booking ID:</strong>
+            <span id="resultId"></span>
+        </div>
+
+        <div class="booking-info">
+            <strong>Customer Name:</strong>
+            <span id="resultName"></span>
+        </div>
+
+        <div class="booking-info">
+            <strong>Service:</strong>
+            <span id="resultService"></span>
+        </div>
+
+        <div class="booking-info">
+            <strong>Date:</strong>
+            <span id="resultDate"></span>
+        </div>
+
+        <div class="booking-info">
+            <strong>Time:</strong>
+            <span id="resultTime"></span>
+        </div>
+
+        <div class="booking-info">
+            <strong>Problem:</strong>
+            <span id="resultProblem"></span>
+        </div>
+
+        <div>
+
+            <strong>Status:</strong>
+
+            <br>
+
+            <span
+                id="resultStatus"
+                class="booking-status">
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="errorMessage"
+        class="error-message">
+
+    </div>
+
+
+</div>
+```
+
+</section>
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+async function checkBookingStatus() {
+
+    const bookingId =
+        document.getElementById("bookingId").value.trim();
+
+    const result =
+        document.getElementById("bookingResult");
+
+    const error =
+        document.getElementById("errorMessage");
+
+
+    // Clear previous messages
+
+    result.style.display = "none";
+
+    error.innerText = "";
+
+
+    // Check Booking ID
+
+    if (!bookingId) {
+
+        error.innerText =
+            "Please enter your Booking ID.";
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `http://localhost:5000/booking-status/${bookingId}`
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            error.innerText =
+                data.message ||
+                "Booking not found.";
+
+            return;
+
+        }
+
+
+        // Display booking details
+
+        document.getElementById("resultId")
+            .innerText = data.id;
+
+        document.getElementById("resultName")
+            .innerText = data.name;
+
+        document.getElementById("resultService")
+            .innerText = data.service;
+
+        document.getElementById("resultDate")
+            .innerText = data.booking_date;
+
+        document.getElementById("resultTime")
+            .innerText = data.booking_time;
+
+        document.getElementById("resultProblem")
+            .innerText = data.problem;
+
+
+        // Status
+
+        const statusElement =
+            document.getElementById("resultStatus");
+
+
+        statusElement.innerText =
+            data.status;
+
+
+        statusElement.className =
+            "booking-status " +
+            data.status
+                .toLowerCase()
+                .replaceAll(" ", "-");
+
+
+        // Show result
+
+        result.style.display =
+            "block";
+
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "errorMessage"
+        ).innerText =
+            "Unable to connect to the server. Please make sure the backend server is running.";
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
