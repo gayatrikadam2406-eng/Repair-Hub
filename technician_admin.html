@@ -293,7 +293,7 @@ async function loadTechnicianJobs() {
 
     try {
 
-        const response = await fetch("http://localhost:5000/bookings");
+        const response = await fetch("http://https://repair-hub-production-94bc.up.railway.app/bookings");
         const bookings = await response.json();
 
         if (!response.ok) {
