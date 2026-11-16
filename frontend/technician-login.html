@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Technician Login | Repair Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="api-config.js"></script>
+</head>
+<body>
+<nav>
+    <div class="logo"><a href="index.html">Repair Hub</a></div>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <a href="login.html" class="register-btn">Customer Login</a>
+</nav>
+<section class="register-section">
+    <div class="register-container">
+        <div class="register-image">
+            <img src="Images/hero.jpg" alt="Repair Hub">
+        </div>
+        <div class="register-form">
+            <h2>Technician Login</h2>
+            <p>Sign in to manage assigned repair jobs.</p>
+            <form id="technicianLoginForm">
+                <div class="input-box">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="email" placeholder="Email Address" required>
+                </div>
+                <div class="input-box">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="register-btn2">Login</button>
+            </form>
+            <p class="login-link">Customer? <a href="login.html">Sign in here</a></p>
+        </div>
+    </div>
+</section>
+<script>
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:" ? "http://localhost:5000" : "https://repair-hub-backend.onrender.com");
+    document
+        .getElementById("technicianLoginForm")
+        .addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}/technician-login`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            email: document.getElementById("email").value.trim(),
+                            password: document.getElementById("password").value
+                        })
+                    }
+                );
+                const data = await response.json();
+
+                if (!response.ok || !data.token) {
+                    alert(data.message || "Technician login failed!");
+                    return;
+                }
+
+                localStorage.removeItem("adminToken");
+                localStorage.removeItem("admin");
+                localStorage.setItem("technicianToken", data.token);
+                localStorage.setItem("technician", JSON.stringify(data.technician));
+                window.location.replace("technician-dashboard.html");
+            } catch (error) {
+                console.error("Technician Login Error:", error);
+                alert("Unable to connect to the authentication server.");
+            }
+        });
+</script>
+</body>
+</html>

@@ -141,9 +141,50 @@
 
 </style>
 
+    <script src="api-config.js"></script>
 </head>
 
 <body>
+<script>
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:" ? "http://localhost:5000" : "https://repair-hub-backend.onrender.com");
+(function () {
+    const loginPage = "technician-login.html";
+    if (!localStorage.getItem("technicianToken")) {
+        window.location.replace(loginPage);
+    }
+
+    window.technicianApiFetch = async function (url, options = {}) {
+        const token = localStorage.getItem("technicianToken");
+        if (!token) {
+            window.location.replace(loginPage);
+            throw new Error("Technician authentication required.");
+        }
+
+        const headers = new Headers(options.headers || {});
+        headers.set("Authorization", "Bearer " + token);
+        const response = await window.fetch(url, { ...options, headers });
+
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem("technicianToken");
+            localStorage.removeItem("technician");
+            window.location.replace(loginPage);
+        }
+
+        return response;
+    };
+
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest("a");
+        if (!link || link.textContent.trim().toLowerCase() !== "logout") {
+            return;
+        }
+        event.preventDefault();
+        localStorage.removeItem("technicianToken");
+        localStorage.removeItem("technician");
+        window.location.replace(loginPage);
+    });
+})();
+</script>
 
 <!-- ================= NAVBAR ================= -->
 
@@ -274,8 +315,8 @@ async function loadBookings() {
     try {
 
         const response =
-            await fetch(
-                "https://repair-hub-production-94bc.up.railway.app/bookings"
+                await window.technicianApiFetch(
+                `${API_BASE_URL}/bookings`
             );
 
 
@@ -472,9 +513,9 @@ async function updateStatus(
 
 
         const response =
-            await fetch(
+                await window.technicianApiFetch(
 
-                `https://repair-hub-production-94bc.up.railway.app/booking-status/${bookingId}`,
+                `${API_BASE_URL}/booking-status/${bookingId}`,
 
                 {
 
