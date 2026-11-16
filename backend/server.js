@@ -5,38 +5,142 @@ const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+const { sendEmail } = require("./email");
+const {
+    createAdminToken,
+    createTechnicianToken,
+    requireAdmin,
+    requireAdminOrTechnician
+} = require("./auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const bookingStatuses = ["Pending", "Accepted", "In Progress", "Completed", "Rejected"];
+
+function sendEmailNotification(message) {
+    const requiredSettings = [
+        "EMAIL_HOST",
+        "EMAIL_PORT",
+        "EMAIL_USER",
+        "EMAIL_PASSWORD",
+        "EMAIL_FROM"
+    ];
+
+    if (!message.to || requiredSettings.some((setting) => !process.env[setting])) {
+        console.warn("Email notification skipped: email settings or recipient are missing.");
+        return;
+    }
+
+    sendEmail(message).catch((error) => {
+        console.error("Email notification failed:", error.message);
+    });
+}
+
+function escapeHtml(value) {
+    // Encode HTML syntax characters before adding customer values to the email.
+    return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
 
 // ===============================
 // MIDDLEWARE
 // ===============================
 
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(express.json());
 
 // ===============================
 // MYSQL DATABASE CONNECTION
 // ===============================
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 3306
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
+
+let technicianPasswordHash;
+
+function seedFirstAdmin() {
+    const { ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
+
+    if (!ADMIN_NAME || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+        console.warn("Admin bootstrap skipped; configure ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD.");
+        return;
+    }
+
+    db.query("SELECT id FROM admins LIMIT 1", (err, admins) => {
+        if (err) {
+            console.log("Admin bootstrap check failed:", err.message);
+            return;
+        }
+
+        if (admins.length > 0) {
+            return;
+        }
+
+        bcrypt.hash(ADMIN_PASSWORD, 12, (hashError, hashedPassword) => {
+            if (hashError) {
+                console.log("Admin password hashing failed:", hashError.message);
+                return;
+            }
+
+            db.query(
+                "INSERT INTO admins (name, email, password, role) VALUES (?, ?, ?, 'admin')",
+                [ADMIN_NAME, ADMIN_EMAIL, hashedPassword],
+                (insertError) => {
+                    if (insertError && insertError.code !== "ER_DUP_ENTRY") {
+                        console.log("Admin bootstrap failed:", insertError.message);
+                        return;
+                    }
+
+                    if (!insertError) {
+                        console.log("First admin account created from environment configuration.");
+                    }
+                }
+            );
+        });
+    });
+}
 
 // ===============================
 // CHECK DATABASE CONNECTION
 // ===============================
 
-db.connect((err) => {
+db.getConnection((err, connection) => {
     if (err) {
         console.log("Database connection failed:", err.message);
     } else {
-        console.log("MySQL Database Connected Successfully!");
+        connection.query(`
+            CREATE TABLE IF NOT EXISTS admins (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                role VARCHAR(50) NOT NULL DEFAULT 'admin',
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        `, (tableError) => {
+            connection.release();
+
+            if (tableError) {
+                console.log("Admins table setup failed:", tableError.message);
+                return;
+            }
+
+            console.log("MySQL Database Connected Successfully!");
+            seedFirstAdmin();
+        });
     }
 });
 
@@ -103,6 +207,23 @@ app.post("/register", async (req, res) => {
                         message: "Registration failed!"
                     });
                 }
+
+                sendEmailNotification({
+                    to: process.env.ADMIN_EMAIL,
+                    subject: "New Repair Hub customer registration",
+                    text: [
+                        "A new customer registered with Repair Hub.",
+                        `Name: ${name}`,
+                        `Email: ${email}`,
+                        `Phone: ${phone}`,
+                        `Address: ${address}`
+                    ].join("\n")
+                });
+                sendEmailNotification({
+                    to: email,
+                    subject: "Welcome to Repair Hub",
+                    text: `Hello ${name},\n\nYour Repair Hub account has been created successfully. Welcome!`
+                });
 
                 res.status(201).json({
                     message: "Registration successful!"
@@ -200,6 +321,109 @@ app.post("/login", (req, res) => {
 });
 
 // ===============================
+// ADMIN LOGIN API
+// ===============================
+
+app.post("/admin-login", (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            message: "Please enter email and password!"
+        });
+    }
+
+    if (!process.env.JWT_SECRET || !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+        return res.status(503).json({
+            message: "Admin authentication is not configured!"
+        });
+    }
+
+    db.query(
+        "SELECT id, name, email, password, role FROM admins WHERE email = ? LIMIT 1",
+        [email],
+        async (err, results) => {
+            if (err) {
+                console.log("Admin Login Error:", err);
+                return res.status(500).json({ message: "Admin login failed!" });
+            }
+
+            if (results.length === 0 || results[0].role !== "admin") {
+                return res.status(401).json({ message: "Invalid admin email or password." });
+            }
+
+            const admin = results[0];
+
+            try {
+                const passwordMatch = await bcrypt.compare(password, admin.password);
+
+                if (!passwordMatch) {
+                    return res.status(401).json({ message: "Invalid admin email or password." });
+                }
+
+                const token = createAdminToken(admin, process.env.JWT_SECRET);
+                delete admin.password;
+
+                return res.json({
+                    message: "Admin login successful!",
+                    token,
+                    admin
+                });
+            } catch (error) {
+                console.log("Admin Authentication Error:", error);
+                return res.status(500).json({ message: "Admin login failed!" });
+            }
+        }
+    );
+});
+
+// ===============================
+// TECHNICIAN LOGIN API
+// ===============================
+
+app.post("/technician-login", async (req, res) => {
+    const { email, password } = req.body;
+    const { TECHNICIAN_NAME, TECHNICIAN_EMAIL, TECHNICIAN_PASSWORD, JWT_SECRET } = process.env;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: "Please enter email and password!" });
+    }
+
+    if (!TECHNICIAN_NAME || !TECHNICIAN_EMAIL || !TECHNICIAN_PASSWORD || !JWT_SECRET) {
+        return res.status(503).json({ message: "Technician authentication is not configured!" });
+    }
+
+    if (email.trim().toLowerCase() !== TECHNICIAN_EMAIL.trim().toLowerCase()) {
+        return res.status(401).json({ message: "Invalid email or password!" });
+    }
+
+    try {
+        technicianPasswordHash ??= await bcrypt.hash(TECHNICIAN_PASSWORD, 12);
+        const passwordMatch = await bcrypt.compare(password, technicianPasswordHash);
+
+        if (!passwordMatch) {
+            return res.status(401).json({ message: "Invalid email or password!" });
+        }
+
+        const technician = {
+            id: "environment-technician",
+            name: TECHNICIAN_NAME,
+            email: TECHNICIAN_EMAIL,
+            role: "technician"
+        };
+
+        return res.json({
+            message: "Technician login successful!",
+            token: createTechnicianToken(technician, JWT_SECRET),
+            technician
+        });
+    } catch (error) {
+        console.log("Technician Authentication Error:", error);
+        return res.status(500).json({ message: "Technician login failed!" });
+    }
+});
+
+// ===============================
 // BOOKING API
 // ===============================
 
@@ -270,6 +494,56 @@ app.post("/book-service", (req, res) => {
                 });
             }
 
+            const bookingDetails = [
+                `Customer: ${name}`,
+                `Email: ${email}`,
+                `Phone: ${phone}`,
+                `Address: ${address}`,
+                `Service: ${service}`,
+                `Date: ${booking_date}`,
+                `Time: ${booking_time}`,
+                `Problem: ${problem}`
+            ].join("\n");
+
+            // Build the admin email after MySQL has returned the saved booking ID.
+            const adminBookingDetails = [
+                ["Customer name", name],
+                ["Customer email", email],
+                ["Customer phone number", phone],
+                ["Repair service name", service],
+                ["Booking ID", result.insertId],
+                ["Booking date", booking_date],
+                ["Customer address", address]
+            ];
+            const adminBookingText = [
+                "New Repair Service Booking",
+                "",
+                ...adminBookingDetails.map(([label, value]) => `${label}: ${value}`)
+            ].join("\n");
+            const adminBookingRows = adminBookingDetails.map(([label, value]) => (
+                `<tr><th style="padding:10px;text-align:left;border:1px solid #dddddd;background:#f5f5f5;">${escapeHtml(label)}</th><td style="padding:10px;border:1px solid #dddddd;">${escapeHtml(value)}</td></tr>`
+            )).join("");
+
+            sendEmailNotification({
+                to: process.env.ADMIN_EMAIL,
+                subject: "New Repair Service Booking - Repair Hub",
+                text: adminBookingText,
+                html: `<!doctype html>
+<html>
+<body style="margin:0;padding:24px;font-family:Arial,sans-serif;color:#222222;">
+    <h1 style="font-size:22px;">New Repair Service Booking</h1>
+    <p>A customer has booked a repair service. Details are below.</p>
+    <table style="width:100%;max-width:640px;border-collapse:collapse;">${adminBookingRows}</table>
+    <p style="margin-top:24px;color:#666666;">Repair Hub</p>
+</body>
+</html>`
+            });
+            sendEmailNotification({
+                to: email,
+                subject: "Repair Hub booking confirmation",
+                text: `Hello ${name},\n\nYour booking has been received with status: Pending.\n\n${bookingDetails}`
+            });
+
             res.status(201).json({
                 message: "Booking successful!",
                 bookingId: result.insertId
@@ -282,7 +556,7 @@ app.post("/book-service", (req, res) => {
 // GET ALL BOOKINGS
 // ===============================
 
-app.get("/bookings", (req, res) => {
+app.get("/bookings", requireAdminOrTechnician, (req, res) => {
 
     const sql = `
         SELECT *
@@ -309,15 +583,15 @@ app.get("/bookings", (req, res) => {
 // UPDATE BOOKING STATUS
 // ===============================
 
-app.put("/booking-status/:id", (req, res) => {
+app.put("/booking-status/:id", requireAdminOrTechnician, (req, res) => {
 
     const bookingId = req.params.id;
     const { status } = req.body;
 
-    if (!status) {
+    if (!bookingStatuses.includes(status)) {
 
         return res.status(400).json({
-            message: "Status is required!"
+            message: "Status must be Pending, Accepted, In Progress, Completed, or Rejected!"
         });
     }
 
@@ -351,6 +625,39 @@ app.put("/booking-status/:id", (req, res) => {
             res.json({
                 message: "Booking status updated successfully!"
             });
+
+            db.query(
+                `
+                SELECT name, email, service, booking_date, booking_time, status
+                FROM bookings
+                WHERE id = ?
+                `,
+                [bookingId],
+                (lookupError, bookings) => {
+                    if (lookupError) {
+                        console.error("Email notification data lookup failed:", lookupError.message);
+                        return;
+                    }
+
+                    if (bookings.length === 0) {
+                        return;
+                    }
+
+                    const booking = bookings[0];
+                    sendEmailNotification({
+                        to: booking.email,
+                        subject: "Repair Hub booking status update",
+                        text: [
+                            `Hello ${booking.name},`,
+                            "",
+                            `Your booking status is now: ${booking.status}.`,
+                            `Service: ${booking.service}`,
+                            `Date: ${booking.booking_date}`,
+                            `Time: ${booking.booking_time}`
+                        ].join("\n")
+                    });
+                }
+            );
         }
     );
 });
@@ -406,7 +713,7 @@ app.get("/booking-status/:id", (req, res) => {
 // ADMIN STATISTICS
 // ===============================
 
-app.get("/admin-stats", (req, res) => {
+app.get("/admin-stats", requireAdmin, (req, res) => {
 
     const stats = {};
 
@@ -509,7 +816,7 @@ app.get("/admin-stats", (req, res) => {
 // ADMIN RECENT BOOKINGS
 // ===============================
 
-app.get("/admin-recent-bookings", (req, res) => {
+app.get("/admin-recent-bookings", requireAdmin, (req, res) => {
 
     const sql = `
         SELECT
@@ -546,7 +853,7 @@ app.get("/admin-recent-bookings", (req, res) => {
 // GET ALL USERS
 // ===============================
 
-app.get("/users", (req, res) => {
+app.get("/users", requireAdmin, (req, res) => {
 
     const sql = `
         SELECT
@@ -578,10 +885,10 @@ app.get("/users", (req, res) => {
 // START SERVER
 // ===============================
 
-app.listen(PORT, () => {
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
-    console.log(
-        `Server running at http://localhost:${PORT}`
-    );
-
-});
+module.exports = { app, db };

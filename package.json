@@ -1,0 +1,10 @@
+{
+  "name": "repair-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repair Hub - Appliance and Device Repair Service",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test"
+  }
+}
