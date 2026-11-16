@@ -1,0 +1,12 @@
+# Keep local configuration and credentials out of Git.
+.env
+**/.env
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
