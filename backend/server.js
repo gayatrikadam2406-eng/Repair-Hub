@@ -260,6 +260,22 @@ app.get("/", (req, res) => {
     res.send("Repair Hub Backend is Running!");
 });
 
+app.get("/db-check", (req, res) => {
+    db.query("SELECT DATABASE() AS currentDb, @@hostname AS host", (err, dbInfo) => {
+        if (err) return res.status(500).json({ error: err.message });
+        db.query("SHOW TABLES", (tableErr, tables) => {
+            if (tableErr) return res.status(500).json({ error: tableErr.message });
+            db.query("SELECT id, name, email FROM technicians", (techErr, techs) => {
+                res.json({
+                    db: dbInfo[0],
+                    tables: tables.map(t => Object.values(t)[0]),
+                    technicians: techErr ? techErr.message : techs
+                });
+            });
+        });
+    });
+});
+
 // ===============================
 // REGISTER API
 // ===============================
