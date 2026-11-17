@@ -58,7 +58,7 @@ app.use(express.json());
 // MYSQL DATABASE CONNECTION
 // ===============================
 
-const db = mysql.createPool({
+const poolConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
@@ -67,7 +67,16 @@ const db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-});
+};
+
+if (process.env.DB_SSL === "true" || String(process.env.DB_PORT) === "4000") {
+    poolConfig.ssl = {
+        minVersion: "TLSv1.2",
+        rejectUnauthorized: true
+    };
+}
+
+const db = mysql.createPool(poolConfig);
 
 let technicianPasswordHash;
 
