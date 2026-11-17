@@ -261,18 +261,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/db-check", (req, res) => {
-    const testEmail = "technician@gmail.com";
-    db.query("SELECT id, name, email, password FROM technicians WHERE email = ? LIMIT 1", [testEmail], async (err, results) => {
-        let match = false;
-        if (!err && results && results[0]) {
-            match = await bcrypt.compare(process.env.TECHNICIAN_PASSWORD || "", results[0].password);
-        }
-        res.json({
-            foundRows: results ? results.length : 0,
-            err: err ? err.message : null,
-            passMatch: match,
-            techEmail: results && results[0] ? results[0].email : null
-        });
+    res.json({
+        vercelPassLen: process.env.TECHNICIAN_PASSWORD ? process.env.TECHNICIAN_PASSWORD.length : 0,
+        vercelTechEmail: process.env.TECHNICIAN_EMAIL
     });
 });
 
