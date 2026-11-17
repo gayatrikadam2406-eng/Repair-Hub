@@ -263,7 +263,8 @@ app.get("/", (req, res) => {
 app.get("/db-check", (req, res) => {
     res.json({
         vercelPassLen: process.env.TECHNICIAN_PASSWORD ? process.env.TECHNICIAN_PASSWORD.length : 0,
-        vercelTechEmail: process.env.TECHNICIAN_EMAIL
+        isSameAsEmailPass: process.env.TECHNICIAN_PASSWORD === process.env.EMAIL_PASSWORD,
+        isSameAsAdminPass: process.env.TECHNICIAN_PASSWORD === process.env.ADMIN_PASSWORD
     });
 });
 
