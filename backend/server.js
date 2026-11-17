@@ -261,24 +261,17 @@ app.get("/", (req, res) => {
 });
 
 app.get("/db-check", (req, res) => {
-    db.query("SELECT DATABASE() AS currentDb, @@hostname AS host", (err, dbInfo) => {
-        if (err) return res.status(500).json({ error: err.message });
-        db.query("SHOW TABLES", (tableErr, tables) => {
-            if (tableErr) return res.status(500).json({ error: tableErr.message });
-            db.query("SELECT id, name, email, password FROM technicians", async (techErr, techs) => {
-                let match = false;
-                if (!techErr && techs && techs[0]) {
-                    match = await bcrypt.compare(process.env.TECHNICIAN_PASSWORD || "", techs[0].password);
-                }
-                res.json({
-                    db: dbInfo[0],
-                    tables: tables.map(t => Object.values(t)[0]),
-                    hasEnvTechPass: !!process.env.TECHNICIAN_PASSWORD,
-                    envTechEmail: process.env.TECHNICIAN_EMAIL,
-                    techRowEmail: techs && techs[0] ? techs[0].email : null,
-                    passMatch: match
-                });
-            });
+    const testEmail = "technician@gmail.com";
+    db.query("SELECT id, name, email, password FROM technicians WHERE email = ? LIMIT 1", [testEmail], async (err, results) => {
+        let match = false;
+        if (!err && results && results[0]) {
+            match = await bcrypt.compare(process.env.TECHNICIAN_PASSWORD || "", results[0].password);
+        }
+        res.json({
+            foundRows: results ? results.length : 0,
+            err: err ? err.message : null,
+            passMatch: match,
+            techEmail: results && results[0] ? results[0].email : null
         });
     });
 });
@@ -522,9 +515,9 @@ app.post("/technician-login", async (req, res) => {
     const trimmedEmail = email.trim().toLowerCase();
 
     // 1. Query the database technicians table
-    const sql = "SELECT id, name, email, password, phone, specialization, role FROM technicians WHERE LOWER(email) = ? LIMIT 1";
+    const sql = "SELECT id, name, email, password, phone, specialization, role FROM technicians WHERE LOWER(email) = ? OR email = ? LIMIT 1";
 
-    db.query(sql, [trimmedEmail], async (err, results) => {
+    db.query(sql, [trimmedEmail, trimmedEmail], async (err, results) => {
         if (!err && results && results.length > 0) {
             const technician = results[0];
 
@@ -532,7 +525,7 @@ app.post("/technician-login", async (req, res) => {
                 const passwordMatch = await bcrypt.compare(password, technician.password);
 
                 if (!passwordMatch) {
-                    return res.status(401).json({ message: "Invalid email or password!" });
+                    return res.status(401).json({ message: "Invalid email or password!", debug: "pass_mismatch" });
                 }
 
                 const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
@@ -561,7 +554,7 @@ app.post("/technician-login", async (req, res) => {
                         const passwordMatch = await bcrypt.compare(password, technician.password);
 
                         if (!passwordMatch) {
-                            return res.status(401).json({ message: "Invalid email or password!" });
+                            return res.status(401).json({ message: "Invalid email or password!", debug: "admin_pass_mismatch" });
                         }
 
                         const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
@@ -611,7 +604,12 @@ app.post("/technician-login", async (req, res) => {
                     }
                 }
 
-                return res.status(401).json({ message: "Invalid email or password!" });
+                return res.status(401).json({
+                    message: "Invalid email or password!",
+                    debug: "not_found",
+                    err: err ? err.message : null,
+                    rows: results ? results.length : null
+                });
             }
         );
     });
