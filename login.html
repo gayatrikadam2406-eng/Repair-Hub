@@ -1,310 +1,298 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Login | Repair Hub</title>
-
-<link rel="stylesheet" href="style.css">
-
-<link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Repair Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <script src="api-config.js"></script>
+    <style>
+        .role-switch-container {
+            display: flex;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            gap: 6px;
+        }
+        .role-tab-btn {
+            flex: 1;
+            padding: 10px 6px;
+            border: none;
+            border-radius: 7px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: #495057;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .role-tab-btn.active {
+            background: #0d6efd;
+            color: #ffffff;
+            box-shadow: 0 3px 8px rgba(13, 110, 253, 0.28);
+        }
+        .role-tab-btn:hover:not(.active) {
+            background: #e2e8f0;
+            color: #212529;
+        }
+        .role-badge-note {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 15px;
+            text-align: center;
+        }
+    </style>
 </head>
-
 <body>
 
 <!-- ================= NAVBAR ================= -->
-
 <nav>
-
     <div class="logo">
-
-        <a href="index.html">
-            Repair Hub
-        </a>
-
+        <a href="index.html">Repair Hub</a>
     </div>
-
     <ul>
-
-        <li>
-            <a href="index.html">
-                Home
-            </a>
-        </li>
-
-        <li>
-            <a href="services.html">
-                Services
-            </a>
-        </li>
-
-        <li>
-            <a href="booking.html">
-                Book Service
-            </a>
-        </li>
-
-        <li>
-            <a href="contact.html">
-                Contact
-            </a>
-        </li>
-
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="booking.html">Book Service</a></li>
+        <li><a href="booking-status.html">Track Booking</a></li>
+        <li><a href="contact.html">Contact</a></li>
     </ul>
-
-    <a href="register.html" class="register-btn">
-        Register
-    </a>
-
+    <a href="register.html" class="register-btn">Register</a>
 </nav>
 
-
 <!-- ================= LOGIN SECTION ================= -->
-
 <section class="register-section">
-
     <div class="register-container">
 
         <!-- LEFT IMAGE -->
-
         <div class="register-image">
-
-            <img
-                src="Images/hero.jpg"
-                alt="Repair Hub">
-
+            <img src="Images/hero.jpg" alt="Repair Hub">
         </div>
 
-
         <!-- RIGHT LOGIN FORM -->
-
         <div class="register-form">
 
-            <h2>
-                Welcome Back
-            </h2>
+            <!-- 3 ROLE SELECTOR TABS -->
+            <div class="role-switch-container" role="tablist">
+                <button type="button" id="tabCustomer" class="role-tab-btn active" onclick="setLoginRole('customer')">
+                    <i class="fa-solid fa-user"></i> Customer
+                </button>
+                <button type="button" id="tabAdmin" class="role-tab-btn" onclick="setLoginRole('admin')">
+                    <i class="fa-solid fa-user-shield"></i> Admin
+                </button>
+                <button type="button" id="tabTechnician" class="role-tab-btn" onclick="setLoginRole('technician')">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> Technician
+                </button>
+            </div>
 
-            <p>
-                Login to your Repair Hub account.
-            </p>
-
+            <h2 id="loginTitle">Customer Login</h2>
+            <p id="loginSubtitle">Login to your Repair Hub customer account.</p>
 
             <!-- LOGIN FORM -->
-
             <form id="loginForm">
 
                 <!-- EMAIL -->
-
                 <div class="input-box">
-
                     <i class="fa-solid fa-envelope"></i>
-
                     <input
                         type="email"
                         id="email"
                         placeholder="Email Address"
-                        required>
-
+                        required
+                        autocomplete="email"
+                    >
                 </div>
 
-
                 <!-- PASSWORD -->
-
                 <div class="input-box">
-
                     <i class="fa-solid fa-lock"></i>
-
                     <input
                         type="password"
                         id="password"
                         placeholder="Password"
-                        required>
-
+                        required
+                        autocomplete="current-password"
+                    >
                 </div>
-
 
                 <!-- REMEMBER ME -->
-
-                <div
-                    style="display:flex;justify-content:space-between;margin-bottom:20px;">
-
-                    <label>
-
-                        <input type="checkbox">
-
-                        Remember Me
-
+                <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:14px;">
+                    <label style="cursor:pointer;display:flex;align-items:center;gap:6px;">
+                        <input type="checkbox" id="rememberMe"> Remember Me
                     </label>
-
-                    <a
-                        href="#"
-                        style="color:#0d6efd;text-decoration:none;">
-
-                        Forgot Password?
-
-                    </a>
-
+                    <a href="#" style="color:#0d6efd;text-decoration:none;">Forgot Password?</a>
                 </div>
 
-
                 <!-- LOGIN BUTTON -->
-
-                <button
-                    type="submit"
-                    class="register-btn2">
-
-                    Login
-
+                <button type="submit" id="loginBtn" class="register-btn2">
+                    Login as Customer
                 </button>
 
             </form>
 
-
-            <!-- REGISTER LINK -->
-
-            <p class="login-link">
-
-                Don't have an account?
-
-                <a href="register.html">
-                    Register
-                </a>
-
+            <!-- FOOTER PROMPT / REGISTER LINK -->
+            <p id="loginFooter" class="login-link">
+                Don't have an account? <a href="register.html">Register</a>
             </p>
+
+            <div id="roleNote" class="role-badge-note" style="display:none;"></div>
 
         </div>
 
     </div>
-
 </section>
 
-
 <!-- ================= LOGIN JAVASCRIPT ================= -->
-
 <script>
-    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:" ? "http://localhost:5000" : "https://repair-hub-backend.onrender.com");
+    const API_BASE_URL = window.API_BASE_URL || (
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        window.location.protocol === "file:"
+            ? "http://localhost:5000"
+            : (window.location.hostname.includes("vercel.app")
+                ? window.location.origin + "/api"
+                : "https://repair-hub-backend.onrender.com")
+    );
 
-    document
-        .getElementById("loginForm")
-        .addEventListener("submit", async function(e) {
+    let currentRole = "customer";
 
-            e.preventDefault();
+    function setLoginRole(role) {
+        currentRole = role;
 
+        const tabCustomer = document.getElementById("tabCustomer");
+        const tabAdmin = document.getElementById("tabAdmin");
+        const tabTechnician = document.getElementById("tabTechnician");
 
-            const email =
-                document
-                    .getElementById("email")
-                    .value
-                    .trim();
+        tabCustomer.classList.remove("active");
+        tabAdmin.classList.remove("active");
+        tabTechnician.classList.remove("active");
 
+        const titleEl = document.getElementById("loginTitle");
+        const subtitleEl = document.getElementById("loginSubtitle");
+        const btnEl = document.getElementById("loginBtn");
+        const footerEl = document.getElementById("loginFooter");
+        const roleNote = document.getElementById("roleNote");
 
-            const password =
-                document
-                    .getElementById("password")
-                    .value;
+        if (role === "admin") {
+            tabAdmin.classList.add("active");
+            titleEl.innerText = "Admin Login";
+            subtitleEl.innerText = "Sign in to manage Repair Hub administration.";
+            btnEl.innerText = "Login as Admin";
+            footerEl.innerHTML = `Customer account? <a href="javascript:void(0)" onclick="setLoginRole('customer')">Sign in as Customer</a>`;
+            roleNote.style.display = "block";
+            roleNote.innerHTML = `Default Admin: <strong>gayatrtikadam2406@gmail.com</strong>`;
+        } else if (role === "technician") {
+            tabTechnician.classList.add("active");
+            titleEl.innerText = "Technician Login";
+            subtitleEl.innerText = "Sign in to manage your assigned repair jobs.";
+            btnEl.innerText = "Login as Technician";
+            footerEl.innerHTML = `Customer account? <a href="javascript:void(0)" onclick="setLoginRole('customer')">Sign in as Customer</a>`;
+            roleNote.style.display = "block";
+            roleNote.innerHTML = `Default Technician: <strong>technician@gmail.com</strong>`;
+        } else {
+            tabCustomer.classList.add("active");
+            titleEl.innerText = "Customer Login";
+            subtitleEl.innerText = "Login to your Repair Hub customer account.";
+            btnEl.innerText = "Login as Customer";
+            footerEl.innerHTML = `Don't have an account? <a href="register.html">Register</a>`;
+            roleNote.style.display = "none";
+        }
+    }
 
+    // Auto-select role based on URL ?role= parameter
+    window.addEventListener("DOMContentLoaded", function () {
+        const params = new URLSearchParams(window.location.search);
+        const roleFromUrl = (params.get("role") || "").toLowerCase();
+        if (roleFromUrl === "admin" || roleFromUrl === "technician" || roleFromUrl === "customer") {
+            setLoginRole(roleFromUrl);
+        } else {
+            setLoginRole("customer");
+        }
+    });
 
-            try {
+    // Handle Login Form Submission
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-                const response =
-                    await fetch(
-                        `${API_BASE_URL}/login`,
-                        {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
 
-                            method: "POST",
+        if (!email || !password) {
+            alert("Please enter both email and password.");
+            return;
+        }
 
-                            headers: {
+        let endpoint = "/login";
+        if (currentRole === "admin") {
+            endpoint = "/admin-login";
+        } else if (currentRole === "technician") {
+            endpoint = "/technician-login";
+        }
 
-                                "Content-Type":
-                                    "application/json"
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            });
 
-                            },
+            const data = await response.json();
 
-                            body:
-                                JSON.stringify({
-
-                                    email: email,
-
-                                    password: password
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (response.ok) {
-
-                    localStorage.removeItem("adminToken");
-                    localStorage.removeItem("admin");
-
-                    localStorage.setItem(
-                        "user",
-                        JSON.stringify(data.user)
-                    );
-
-
-                    if (data.user && data.user.id) {
-
-                        localStorage.setItem(
-                            "userId",
-                            data.user.id
-                        );
-
-                    }
-
-
-                    alert(
-                        "Login successful!"
-                    );
-
-
-                    window.location.href =
-                        "customer-dashboard.html";
-
-                }
-
-                else {
-
-                    alert(
-                        data.message ||
-                        "Invalid email or password!"
-                    );
-
-                }
-
+            if (!response.ok) {
+                alert(data.message || "Invalid credentials! Please try again.");
+                return;
             }
 
-            catch (error) {
+            if (currentRole === "customer") {
+                localStorage.removeItem("adminToken");
+                localStorage.removeItem("admin");
+                localStorage.removeItem("technicianToken");
+                localStorage.removeItem("technician");
 
-                console.error(
-                    "Login Error:",
-                    error
-                );
+                localStorage.setItem("user", JSON.stringify(data.user));
+                if (data.user && data.user.id) {
+                    localStorage.setItem("userId", data.user.id);
+                }
 
+                alert("Login successful!");
+                window.location.href = "customer-dashboard.html";
+            } else if (currentRole === "admin") {
+                localStorage.removeItem("user");
+                localStorage.removeItem("userId");
+                localStorage.removeItem("technicianToken");
+                localStorage.removeItem("technician");
 
-                alert(
-                    "Server se connection nahi ho raha! " +
-                    "Please make sure backend server is running."
-                );
+                localStorage.setItem("adminToken", data.token);
+                localStorage.setItem("admin", JSON.stringify(data.admin));
 
+                alert("Admin login successful!");
+                window.location.href = "admin.html";
+            } else if (currentRole === "technician") {
+                localStorage.removeItem("user");
+                localStorage.removeItem("userId");
+                localStorage.removeItem("adminToken");
+                localStorage.removeItem("admin");
+
+                localStorage.setItem("technicianToken", data.token);
+                localStorage.setItem("technician", JSON.stringify(data.technician));
+
+                alert("Technician login successful!");
+                window.location.href = "technician-dashboard.html";
             }
-
-        });
-
+        } catch (error) {
+            console.error("Login Error:", error);
+            alert("Unable to connect to the server. Please verify your backend is running.");
+        }
+    });
 </script>
 
 </body>
-
 </html>

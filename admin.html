@@ -171,7 +171,7 @@
 <script>
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:" ? "http://localhost:5000" : "https://repair-hub-backend.onrender.com");
 (function () {
-    const loginPage = "admin-login.html";
+    const loginPage = "login.html?role=admin";
     if (!localStorage.getItem("adminToken")) {
         window.location.replace(loginPage);
     }

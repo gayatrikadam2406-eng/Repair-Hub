@@ -476,7 +476,7 @@
 
 
             document.getElementById("booking_date")
-                .innerText = data.booking_date;
+                .innerText = data.booking_date ? String(data.booking_date).split("T")[0] : "N/A";
 
 
             document.getElementById("booking_time")

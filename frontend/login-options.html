@@ -13,6 +13,8 @@
     <ul>
         <li><a href="index.html">Home</a></li>
         <li><a href="services.html">Services</a></li>
+        <li><a href="booking.html">Book Service</a></li>
+        <li><a href="booking-status.html">Track Booking</a></li>
         <li><a href="contact.html">Contact</a></li>
     </ul>
     <a href="register.html" class="register-btn">Register</a>
@@ -26,9 +28,15 @@
         <div class="register-form">
             <h2>Choose Login Type</h2>
             <p>Select the account type you want to sign in with.</p>
-            <a href="login.html" class="register-btn2" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">Customer Login</a>
-            <a href="technician-login.html" class="register-btn2" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">Technician Login</a>
-            <a href="admin-login.html" class="register-btn2" style="display:block;text-align:center;text-decoration:none;">Admin Login</a>
+            <a href="login.html?role=customer" class="register-btn2" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">
+                <i class="fa-solid fa-user" style="margin-right:8px;"></i>Customer Login
+            </a>
+            <a href="login.html?role=admin" class="register-btn2" style="display:block;text-align:center;text-decoration:none;margin-bottom:14px;">
+                <i class="fa-solid fa-user-shield" style="margin-right:8px;"></i>Admin Login
+            </a>
+            <a href="login.html?role=technician" class="register-btn2" style="display:block;text-align:center;text-decoration:none;">
+                <i class="fa-solid fa-screwdriver-wrench" style="margin-right:8px;"></i>Technician Login
+            </a>
             <p class="login-link"><a href="index.html">Back to Home</a></p>
         </div>
     </div>
