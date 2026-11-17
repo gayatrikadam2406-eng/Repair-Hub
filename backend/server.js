@@ -141,8 +141,8 @@ function seedFirstTechnician() {
         return;
     }
 
-    db.query("SELECT id FROM technicians LIMIT 1", (err, technicians) => {
-        if (err || (technicians && technicians.length > 0)) {
+    db.query("SELECT id, password FROM technicians WHERE LOWER(email) = ? LIMIT 1", [TECHNICIAN_EMAIL.toLowerCase()], (err, technicians) => {
+        if (err) {
             return;
         }
 
@@ -152,20 +152,32 @@ function seedFirstTechnician() {
                 return;
             }
 
-            db.query(
-                "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician')",
-                [TECHNICIAN_NAME, TECHNICIAN_EMAIL.toLowerCase(), hashedPassword],
-                (insertError) => {
-                    if (insertError && insertError.code !== "ER_DUP_ENTRY") {
-                        console.log("Technician bootstrap failed:", insertError.message);
-                        return;
+            if (technicians && technicians.length > 0) {
+                db.query(
+                    "UPDATE technicians SET password = ?, name = ? WHERE id = ?",
+                    [hashedPassword, TECHNICIAN_NAME, technicians[0].id],
+                    (updateError) => {
+                        if (!updateError) {
+                            console.log("Technician credentials synchronized with environment configuration.");
+                        }
                     }
+                );
+            } else {
+                db.query(
+                    "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician')",
+                    [TECHNICIAN_NAME, TECHNICIAN_EMAIL.toLowerCase(), hashedPassword],
+                    (insertError) => {
+                        if (insertError && insertError.code !== "ER_DUP_ENTRY") {
+                            console.log("Technician bootstrap failed:", insertError.message);
+                            return;
+                        }
 
-                    if (!insertError) {
-                        console.log("First technician account created from environment configuration.");
+                        if (!insertError) {
+                            console.log("First technician account created from environment configuration.");
+                        }
                     }
-                }
-            );
+                );
+            }
         });
     });
 }
@@ -258,14 +270,6 @@ db.getConnection((err, connection) => {
 
 app.get("/", (req, res) => {
     res.send("Repair Hub Backend is Running!");
-});
-
-app.get("/db-check", (req, res) => {
-    res.json({
-        vercelPassLen: process.env.TECHNICIAN_PASSWORD ? process.env.TECHNICIAN_PASSWORD.length : 0,
-        isSameAsEmailPass: process.env.TECHNICIAN_PASSWORD === process.env.EMAIL_PASSWORD,
-        isSameAsAdminPass: process.env.TECHNICIAN_PASSWORD === process.env.ADMIN_PASSWORD
-    });
 });
 
 // ===============================
@@ -517,7 +521,7 @@ app.post("/technician-login", async (req, res) => {
                 const passwordMatch = await bcrypt.compare(password, technician.password);
 
                 if (!passwordMatch) {
-                    return res.status(401).json({ message: "Invalid email or password!", debug: "pass_mismatch" });
+                    return res.status(401).json({ message: "Invalid email or password!" });
                 }
 
                 const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
@@ -546,7 +550,7 @@ app.post("/technician-login", async (req, res) => {
                         const passwordMatch = await bcrypt.compare(password, technician.password);
 
                         if (!passwordMatch) {
-                            return res.status(401).json({ message: "Invalid email or password!", debug: "admin_pass_mismatch" });
+                            return res.status(401).json({ message: "Invalid email or password!" });
                         }
 
                         const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
@@ -596,12 +600,7 @@ app.post("/technician-login", async (req, res) => {
                     }
                 }
 
-                return res.status(401).json({
-                    message: "Invalid email or password!",
-                    debug: "not_found",
-                    err: err ? err.message : null,
-                    rows: results ? results.length : null
-                });
+                return res.status(401).json({ message: "Invalid email or password!" });
             }
         );
     });
