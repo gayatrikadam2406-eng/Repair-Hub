@@ -159,6 +159,40 @@ db.getConnection((err, connection) => {
 
             console.log("MySQL Database Connected Successfully!");
             seedFirstAdmin();
+
+            // Auto-create users table if not exists
+            db.query(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL UNIQUE,
+                    password VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+                    phone VARCHAR(20) DEFAULT NULL,
+                    address VARCHAR(255) DEFAULT NULL
+                )
+            `, (uErr) => {
+                if (uErr) console.log("Users table setup check:", uErr.message);
+            });
+
+            // Auto-create bookings table if not exists
+            db.query(`
+                CREATE TABLE IF NOT EXISTS bookings (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    phone VARCHAR(20) NOT NULL,
+                    email VARCHAR(100) NOT NULL,
+                    address VARCHAR(255) NOT NULL,
+                    service VARCHAR(100) NOT NULL,
+                    booking_date DATE NOT NULL,
+                    booking_time TIME NOT NULL,
+                    problem TEXT NOT NULL,
+                    status VARCHAR(50) DEFAULT 'Pending',
+                    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `, (bErr) => {
+                if (bErr) console.log("Bookings table setup check:", bErr.message);
+            });
         });
     }
 });

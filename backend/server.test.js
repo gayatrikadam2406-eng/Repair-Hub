@@ -106,6 +106,8 @@ const fakePool = {
                         booking_time,
                         status
                     })));
+            } else if (normalizedSql.startsWith("CREATE TABLE IF NOT EXISTS")) {
+                callback(null, {});
             } else if (normalizedSql.includes("FROM bookings")) {
                 callback(null, database.bookings);
             } else if (normalizedSql.includes("FROM users")) {
