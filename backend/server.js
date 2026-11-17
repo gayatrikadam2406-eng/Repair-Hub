@@ -54,6 +54,16 @@ function escapeHtml(value) {
 app.use(cors({ origin: true }));
 app.use(express.json());
 
+// Handle /api prefix for Vercel Serverless Function routing
+app.use((req, res, next) => {
+    if (req.url.startsWith("/api/")) {
+        req.url = req.url.slice(4);
+    } else if (req.url === "/api") {
+        req.url = "/";
+    }
+    next();
+});
+
 // ===============================
 // MYSQL DATABASE CONNECTION
 // ===============================
