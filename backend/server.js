@@ -265,11 +265,18 @@ app.get("/db-check", (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         db.query("SHOW TABLES", (tableErr, tables) => {
             if (tableErr) return res.status(500).json({ error: tableErr.message });
-            db.query("SELECT id, name, email FROM technicians", (techErr, techs) => {
+            db.query("SELECT id, name, email, password FROM technicians", async (techErr, techs) => {
+                let match = false;
+                if (!techErr && techs && techs[0]) {
+                    match = await bcrypt.compare(process.env.TECHNICIAN_PASSWORD || "", techs[0].password);
+                }
                 res.json({
                     db: dbInfo[0],
                     tables: tables.map(t => Object.values(t)[0]),
-                    technicians: techErr ? techErr.message : techs
+                    hasEnvTechPass: !!process.env.TECHNICIAN_PASSWORD,
+                    envTechEmail: process.env.TECHNICIAN_EMAIL,
+                    techRowEmail: techs && techs[0] ? techs[0].email : null,
+                    passMatch: match
                 });
             });
         });
