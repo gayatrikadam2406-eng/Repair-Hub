@@ -1,5 +1,7 @@
+const path = require("path");
 const dotenv = require("dotenv");
 dotenv.config();
+dotenv.config({ path: path.join(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
@@ -132,6 +134,42 @@ function seedFirstAdmin() {
     });
 }
 
+function seedFirstTechnician() {
+    const { TECHNICIAN_NAME, TECHNICIAN_EMAIL, TECHNICIAN_PASSWORD } = process.env;
+
+    if (!TECHNICIAN_NAME || !TECHNICIAN_EMAIL || !TECHNICIAN_PASSWORD) {
+        return;
+    }
+
+    db.query("SELECT id FROM technicians LIMIT 1", (err, technicians) => {
+        if (err || (technicians && technicians.length > 0)) {
+            return;
+        }
+
+        bcrypt.hash(TECHNICIAN_PASSWORD, 12, (hashError, hashedPassword) => {
+            if (hashError) {
+                console.log("Technician password hashing failed:", hashError.message);
+                return;
+            }
+
+            db.query(
+                "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician')",
+                [TECHNICIAN_NAME, TECHNICIAN_EMAIL.toLowerCase(), hashedPassword],
+                (insertError) => {
+                    if (insertError && insertError.code !== "ER_DUP_ENTRY") {
+                        console.log("Technician bootstrap failed:", insertError.message);
+                        return;
+                    }
+
+                    if (!insertError) {
+                        console.log("First technician account created from environment configuration.");
+                    }
+                }
+            );
+        });
+    });
+}
+
 // ===============================
 // CHECK DATABASE CONNECTION
 // ===============================
@@ -192,6 +230,23 @@ db.getConnection((err, connection) => {
                 )
             `, (bErr) => {
                 if (bErr) console.log("Bookings table setup check:", bErr.message);
+            });
+
+            // Auto-create technicians table if not exists
+            db.query(`
+                CREATE TABLE IF NOT EXISTS technicians (
+                    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(100) NOT NULL UNIQUE,
+                    password VARCHAR(255) NOT NULL,
+                    phone VARCHAR(20) DEFAULT NULL,
+                    specialization VARCHAR(100) DEFAULT 'Electronics & Vehicle Repair',
+                    role VARCHAR(50) NOT NULL DEFAULT 'technician',
+                    created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `, (tErr) => {
+                if (tErr) console.log("Technicians table setup check:", tErr.message);
+                else seedFirstTechnician();
             });
         });
     }
@@ -436,44 +491,107 @@ app.post("/admin-login", (req, res) => {
 
 app.post("/technician-login", async (req, res) => {
     const { email, password } = req.body;
-    const { TECHNICIAN_NAME, TECHNICIAN_EMAIL, TECHNICIAN_PASSWORD, JWT_SECRET } = process.env;
 
     if (!email || !password) {
         return res.status(400).json({ message: "Please enter email and password!" });
     }
 
-    if (!TECHNICIAN_NAME || !TECHNICIAN_EMAIL || !TECHNICIAN_PASSWORD || !JWT_SECRET) {
-        return res.status(503).json({ message: "Technician authentication is not configured!" });
-    }
+    const trimmedEmail = email.trim().toLowerCase();
 
-    if (email.trim().toLowerCase() !== TECHNICIAN_EMAIL.trim().toLowerCase()) {
-        return res.status(401).json({ message: "Invalid email or password!" });
-    }
+    // 1. Query the database technicians table
+    const sql = "SELECT id, name, email, password, phone, specialization, role FROM technicians WHERE LOWER(email) = ? LIMIT 1";
 
-    try {
-        technicianPasswordHash ??= await bcrypt.hash(TECHNICIAN_PASSWORD, 12);
-        const passwordMatch = await bcrypt.compare(password, technicianPasswordHash);
+    db.query(sql, [trimmedEmail], async (err, results) => {
+        if (!err && results && results.length > 0) {
+            const technician = results[0];
 
-        if (!passwordMatch) {
-            return res.status(401).json({ message: "Invalid email or password!" });
+            try {
+                const passwordMatch = await bcrypt.compare(password, technician.password);
+
+                if (!passwordMatch) {
+                    return res.status(401).json({ message: "Invalid email or password!" });
+                }
+
+                const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
+                delete technician.password;
+
+                return res.json({
+                    message: "Technician login successful!",
+                    token,
+                    technician
+                });
+            } catch (bcryptErr) {
+                console.log("Technician Authentication Error:", bcryptErr);
+                return res.status(500).json({ message: "Technician login failed!" });
+            }
         }
 
-        const technician = {
-            id: "environment-technician",
-            name: TECHNICIAN_NAME,
-            email: TECHNICIAN_EMAIL,
-            role: "technician"
-        };
+        // 2. Also check admins table where role = 'technician'
+        db.query(
+            "SELECT id, name, email, password, role FROM admins WHERE LOWER(email) = ? AND role = 'technician' LIMIT 1",
+            [trimmedEmail],
+            async (adminErr, adminResults) => {
+                if (!adminErr && adminResults && adminResults.length > 0) {
+                    const technician = adminResults[0];
 
-        return res.json({
-            message: "Technician login successful!",
-            token: createTechnicianToken(technician, JWT_SECRET),
-            technician
-        });
-    } catch (error) {
-        console.log("Technician Authentication Error:", error);
-        return res.status(500).json({ message: "Technician login failed!" });
-    }
+                    try {
+                        const passwordMatch = await bcrypt.compare(password, technician.password);
+
+                        if (!passwordMatch) {
+                            return res.status(401).json({ message: "Invalid email or password!" });
+                        }
+
+                        const token = createTechnicianToken(technician, process.env.JWT_SECRET || "repair_hub_technician_secret");
+                        delete technician.password;
+
+                        return res.json({
+                            message: "Technician login successful!",
+                            token,
+                            technician
+                        });
+                    } catch (adminBcryptErr) {
+                        console.log("Technician Authentication Error:", adminBcryptErr);
+                        return res.status(500).json({ message: "Technician login failed!" });
+                    }
+                }
+
+                // 3. Fallback to environment variables if configured
+                const { TECHNICIAN_NAME, TECHNICIAN_EMAIL, TECHNICIAN_PASSWORD, JWT_SECRET } = process.env;
+
+                if (
+                    TECHNICIAN_EMAIL &&
+                    TECHNICIAN_PASSWORD &&
+                    JWT_SECRET &&
+                    trimmedEmail === TECHNICIAN_EMAIL.trim().toLowerCase()
+                ) {
+                    try {
+                        technicianPasswordHash ??= await bcrypt.hash(TECHNICIAN_PASSWORD, 12);
+                        const passwordMatch = await bcrypt.compare(password, technicianPasswordHash);
+
+                        if (passwordMatch) {
+                            const technician = {
+                                id: "environment-technician",
+                                name: TECHNICIAN_NAME || "Technician",
+                                email: TECHNICIAN_EMAIL,
+                                role: "technician"
+                            };
+
+                            return res.json({
+                                message: "Technician login successful!",
+                                token: createTechnicianToken(technician, JWT_SECRET),
+                                technician
+                            });
+                        }
+                    } catch (envError) {
+                        console.log("Technician Authentication Error:", envError);
+                        return res.status(500).json({ message: "Technician login failed!" });
+                    }
+                }
+
+                return res.status(401).json({ message: "Invalid email or password!" });
+            }
+        );
+    });
 });
 
 // ===============================
@@ -591,15 +709,26 @@ app.post("/book-service", (req, res) => {
 </body>
 </html>`
             });
+            const generatedBookingId = result && result.insertId ? result.insertId : null;
+
+            if (!generatedBookingId) {
+                console.error("Booking saved but insertId is missing from database response:", result);
+                return res.status(500).json({
+                    message: "Booking was saved, but failed to retrieve Booking ID from database."
+                });
+            }
+
             sendEmailNotification({
                 to: email,
                 subject: "Repair Hub booking confirmation",
-                text: `Hello ${name},\n\nYour booking has been received with status: Pending.\n\n${bookingDetails}`
+                text: `Hello ${name},\n\nYour booking has been received with status: Pending.\nBooking ID: ${generatedBookingId}\n\n${bookingDetails}`
             });
 
             res.status(201).json({
                 message: "Booking successful!",
-                bookingId: result.insertId
+                bookingId: generatedBookingId,
+                id: generatedBookingId,
+                insertId: generatedBookingId
             });
         }
     );

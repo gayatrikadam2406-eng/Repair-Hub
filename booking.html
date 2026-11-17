@@ -203,17 +203,23 @@
             const data = await response.json();
 
             if (response.ok) {
-                const bookingId = data.bookingId;
-                alert(
-                    `Booking successful!\n\n` +
-                    `Your Booking ID is: ${bookingId}\n` +
-                    `Please note down this Booking ID to track your repair status.`
-                );
+                const bookingId = data.bookingId || data.id || data.insertId;
 
-                document.getElementById("bookingForm").reset();
+                if (bookingId) {
+                    alert(
+                        `Booking successful!\n\n` +
+                        `Your Booking ID is: ${bookingId}\n` +
+                        `Please note down this Booking ID to track your repair status.`
+                    );
 
-                // Automatically redirect to tracking page with the new booking ID
-                window.location.href = `booking-status.html?id=${bookingId}`;
+                    document.getElementById("bookingForm").reset();
+
+                    // Automatically redirect to tracking page with the valid generated booking ID
+                    window.location.href = `booking-status.html?id=${encodeURIComponent(bookingId)}`;
+                } else {
+                    console.error("Booking created but missing booking ID in response:", data);
+                    alert("Booking was created, but no Booking ID was returned from the server. Please check your email or contact support.");
+                }
             } else {
                 alert(data.message || "Failed to book service. Please check your details.");
             }

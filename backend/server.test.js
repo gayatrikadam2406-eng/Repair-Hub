@@ -108,6 +108,12 @@ const fakePool = {
                     })));
             } else if (normalizedSql.startsWith("CREATE TABLE IF NOT EXISTS")) {
                 callback(null, {});
+            } else if (normalizedSql === "SELECT id FROM technicians LIMIT 1") {
+                callback(null, []);
+            } else if (normalizedSql.includes("FROM technicians WHERE LOWER(email) = ?")) {
+                callback(null, []);
+            } else if (normalizedSql.includes("FROM admins WHERE LOWER(email) = ?")) {
+                callback(null, []);
             } else if (normalizedSql.includes("FROM bookings")) {
                 callback(null, database.bookings);
             } else if (normalizedSql.includes("FROM users")) {

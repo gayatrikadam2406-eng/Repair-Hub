@@ -72,7 +72,7 @@
                 localStorage.removeItem("admin");
                 localStorage.setItem("technicianToken", data.token);
                 localStorage.setItem("technician", JSON.stringify(data.technician));
-                window.location.replace("technician.html");
+                window.location.replace("technician-dashboard.html");
             } catch (error) {
                 console.error("Technician Login Error:", error);
                 alert("Unable to connect to the authentication server.");
