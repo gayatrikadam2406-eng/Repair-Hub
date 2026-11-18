@@ -114,6 +114,10 @@ const fakePool = {
                 callback(null, []);
             } else if (normalizedSql.includes("FROM admins WHERE LOWER(email) = ?")) {
                 callback(null, []);
+            } else if (normalizedSql.startsWith("UPDATE technicians")) {
+                callback(null, { affectedRows: 1 });
+            } else if (normalizedSql.startsWith("INSERT INTO technicians")) {
+                callback(null, { insertId: 1 });
             } else if (normalizedSql.includes("FROM bookings")) {
                 callback(null, database.bookings);
             } else if (normalizedSql.includes("FROM users")) {

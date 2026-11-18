@@ -134,52 +134,86 @@ function seedFirstAdmin() {
     });
 }
 
-function seedFirstTechnician() {
+async function syncTechnicianAccount() {
     const { TECHNICIAN_NAME, TECHNICIAN_EMAIL, TECHNICIAN_PASSWORD } = process.env;
 
     if (!TECHNICIAN_NAME || !TECHNICIAN_EMAIL || !TECHNICIAN_PASSWORD) {
         return;
     }
 
-    db.query("SELECT id, password FROM technicians WHERE LOWER(email) = ? LIMIT 1", [TECHNICIAN_EMAIL.toLowerCase()], (err, technicians) => {
-        if (err) {
-            return;
-        }
+    const techName = TECHNICIAN_NAME.trim();
+    const techEmail = TECHNICIAN_EMAIL.trim().toLowerCase();
+    const techPass = TECHNICIAN_PASSWORD.trim();
 
-        bcrypt.hash(TECHNICIAN_PASSWORD, 12, (hashError, hashedPassword) => {
-            if (hashError) {
-                console.log("Technician password hashing failed:", hashError.message);
-                return;
+    return new Promise((resolve) => {
+        const createTableSql = `
+            CREATE TABLE IF NOT EXISTS technicians (
+                id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                phone VARCHAR(20) DEFAULT NULL,
+                specialization VARCHAR(100) DEFAULT 'Electronics & Vehicle Repair',
+                role VARCHAR(50) NOT NULL DEFAULT 'technician',
+                created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        `;
+
+        db.query(createTableSql, (tableErr) => {
+            if (tableErr) {
+                console.log("Technicians table check:", tableErr.message);
+                return resolve();
             }
 
-            if (technicians && technicians.length > 0) {
-                db.query(
-                    "UPDATE technicians SET password = ?, name = ? WHERE id = ?",
-                    [hashedPassword, TECHNICIAN_NAME, technicians[0].id],
-                    (updateError) => {
-                        if (!updateError) {
-                            console.log("Technician credentials synchronized with environment configuration.");
-                        }
-                    }
-                );
-            } else {
-                db.query(
-                    "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician')",
-                    [TECHNICIAN_NAME, TECHNICIAN_EMAIL.toLowerCase(), hashedPassword],
-                    (insertError) => {
-                        if (insertError && insertError.code !== "ER_DUP_ENTRY") {
-                            console.log("Technician bootstrap failed:", insertError.message);
-                            return;
+            db.query("SELECT id, password FROM technicians WHERE LOWER(email) = ? LIMIT 1", [techEmail], async (findErr, rows) => {
+                if (findErr) {
+                    console.log("Technicians select check:", findErr.message);
+                    return resolve();
+                }
+
+                try {
+                    if (rows && rows.length > 0) {
+                        const existingTech = rows[0];
+                        const matches = await bcrypt.compare(techPass, existingTech.password);
+                        if (matches) {
+                            return resolve();
                         }
 
-                        if (!insertError) {
-                            console.log("First technician account created from environment configuration.");
-                        }
+                        const newHash = await bcrypt.hash(techPass, 12);
+                        db.query(
+                            "UPDATE technicians SET password = ?, name = ? WHERE id = ?",
+                            [newHash, techName, existingTech.id],
+                            (upErr) => {
+                                if (!upErr) {
+                                    console.log("Technician credentials synchronized with environment configuration.");
+                                }
+                                resolve();
+                            }
+                        );
+                    } else {
+                        const newHash = await bcrypt.hash(techPass, 12);
+                        db.query(
+                            "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician')",
+                            [techName, techEmail, newHash],
+                            (insErr) => {
+                                if (!insErr) {
+                                    console.log("First technician account created from environment configuration.");
+                                }
+                                resolve();
+                            }
+                        );
                     }
-                );
-            }
+                } catch (bErr) {
+                    console.log("Technician password hashing failed:", bErr.message);
+                    resolve();
+                }
+            });
         });
     });
+}
+
+function seedFirstTechnician() {
+    syncTechnicianAccount().catch((err) => console.log("Technician bootstrap error:", err.message));
 }
 
 // ===============================
@@ -517,10 +551,14 @@ app.post("/technician-login", async (req, res) => {
         return res.status(400).json({ message: "Please enter email and password!" });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedEmail = String(email).trim().toLowerCase();
+    const trimmedPass = String(password).trim();
     const envEmail = (process.env.TECHNICIAN_EMAIL || "technician@gmail.com").trim().toLowerCase();
-    const envPassword = process.env.TECHNICIAN_PASSWORD;
+    const envPassword = process.env.TECHNICIAN_PASSWORD ? String(process.env.TECHNICIAN_PASSWORD).trim() : null;
     const jwtSecret = process.env.JWT_SECRET || "repair_hub_technician_secret";
+
+    // Ensure database update has completed before processing login
+    await syncTechnicianAccount().catch((err) => console.log("Technician sync check:", err.message));
 
     // 1. Query the database technicians table
     const sql = "SELECT id, name, email, password, phone, specialization, role FROM technicians WHERE LOWER(email) = ? OR email = ? LIMIT 1";
@@ -531,9 +569,12 @@ app.post("/technician-login", async (req, res) => {
 
             try {
                 let passwordMatch = await bcrypt.compare(password, technician.password);
+                if (!passwordMatch && password !== trimmedPass) {
+                    passwordMatch = await bcrypt.compare(trimmedPass, technician.password);
+                }
 
                 // If DB hash didn't match, check if password matches the updated environment variable
-                if (!passwordMatch && envPassword && password === envPassword && (trimmedEmail === envEmail || trimmedEmail === technician.email.toLowerCase())) {
+                if (!passwordMatch && envPassword && (password === envPassword || trimmedPass === envPassword) && (trimmedEmail === envEmail || trimmedEmail === technician.email.toLowerCase())) {
                     passwordMatch = true;
                     // Synchronize the database with the new password hash
                     bcrypt.hash(password, 12, (hashErr, newHashedPassword) => {
@@ -569,8 +610,11 @@ app.post("/technician-login", async (req, res) => {
 
                     try {
                         let passwordMatch = await bcrypt.compare(password, technician.password);
+                        if (!passwordMatch && password !== trimmedPass) {
+                            passwordMatch = await bcrypt.compare(trimmedPass, technician.password);
+                        }
 
-                        if (!passwordMatch && envPassword && password === envPassword) {
+                        if (!passwordMatch && envPassword && (password === envPassword || trimmedPass === envPassword)) {
                             passwordMatch = true;
                         }
 
@@ -593,7 +637,7 @@ app.post("/technician-login", async (req, res) => {
                 // 3. Fallback: If technician table was empty/missing, or credentials match env directly
                 if (
                     envPassword &&
-                    password === envPassword &&
+                    (password === envPassword || trimmedPass === envPassword) &&
                     (trimmedEmail === envEmail || trimmedEmail === "technician@gmail.com")
                 ) {
                     const technician = {
@@ -603,19 +647,9 @@ app.post("/technician-login", async (req, res) => {
                         role: "technician"
                     };
 
-                    // Persist to technicians table if missing
-                    bcrypt.hash(password, 12, (hErr, hPass) => {
-                        if (!hErr && hPass) {
-                            db.query(
-                                "INSERT INTO technicians (name, email, password, phone, specialization, role) VALUES (?, ?, ?, '9876543210', 'Electronics & Vehicle Repair', 'technician') ON DUPLICATE KEY UPDATE password = VALUES(password)",
-                                [technician.name, trimmedEmail, hPass]
-                            );
-                        }
-                    });
-
                     return res.json({
                         message: "Technician login successful!",
-                        token,
+                        token: createTechnicianToken(technician, jwtSecret),
                         technician
                     });
                 }
